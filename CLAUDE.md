@@ -22,6 +22,7 @@ Read these before writing code:
 | `docs/OPEN_QUESTIONS.md` | Unresolved points. Add new ones here instead of guessing silently. |
 | `docs/icd/` | SEDAP-Express ICD (Markdown). **Authoritative** for all SEDAP message formats. |
 | `docs/adr/` | Architecture Decision Records. Write one for every significant decision. |
+| `docs/TESTING.md` | Manual test guide for a human tester, one section per phase's acceptance criteria. Keep it current: a PR that makes a "pending" section testable must update it. |
 
 ## Non-negotiable principles
 
