@@ -51,6 +51,26 @@ class SecurityConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
+    /**
+     * Reachable without login. The diagnostics page (GEN-010) must load on a machine where login
+     * itself may be what is broken, so it, its probe endpoints and the static build assets it
+     * needs are public. The assets are the same hashed bundles every user downloads anyway and
+     * contain no secrets or per-user data.
+     */
+    private static final String[] PUBLIC_PATHS = {
+        "/config.json",
+        "/actuator/health",
+        "/actuator/health/**",
+        "/diag",
+        "/diag.html",
+        "/assets/**",
+        "/favicon.ico",
+        "/api/diag/**",
+        // Spring Boot's error page: without this, an error on a public endpoint (e.g. a 400 on a
+        // malformed probe parameter) is re-dispatched to /error and answered with a login redirect.
+        "/error",
+    };
+
     private final String registrationId;
 
     SecurityConfig(OAuth2ClientProperties oAuth2ClientProperties) {
@@ -63,11 +83,10 @@ class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http, ClientRegistrationRepository clientRegistrationRepository) throws Exception {
-        http.authorizeHttpRequests(
-                        auth -> auth.requestMatchers("/config.json", "/actuator/health", "/actuator/health/**")
-                                .permitAll()
-                                .anyRequest()
-                                .authenticated())
+        http.authorizeHttpRequests(auth -> auth.requestMatchers(PUBLIC_PATHS)
+                        .permitAll()
+                        .anyRequest()
+                        .authenticated())
                 .oauth2Login(
                         oauth2 -> oauth2.userInfoEndpoint(info -> info.oidcUserService(roleMappingOidcUserService())))
                 .logout(logout -> logout.logoutSuccessHandler(oidcLogoutSuccessHandler(clientRegistrationRepository)))

@@ -1,0 +1,192 @@
+/*
+ * Diagnostics page styles. This page deliberately does not load the app's UI stack (Mantine,
+ * P1) so it works where the main app might not; colours still come from tokens only, with a
+ * light and a dark set (CLAUDE.md "UI").
+ */
+:root {
+  color-scheme: light dark;
+  --diag-bg: #f6f7f9;
+  --diag-surface: #ffffff;
+  --diag-text: #1b1f24;
+  --diag-muted: #5b6470;
+  --diag-border: #d5d9df;
+  --diag-ok: #1a7f37;
+  --diag-ok-bg: #e6f4ea;
+  --diag-warn: #9a6700;
+  --diag-warn-bg: #fff4d6;
+  --diag-fail: #b42318;
+  --diag-fail-bg: #fdecea;
+  --diag-accent: #0b5cad;
+  --diag-font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --diag-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --diag-bg: #0f1216;
+    --diag-surface: #181c22;
+    --diag-text: #e6e9ed;
+    --diag-muted: #9aa3ae;
+    --diag-border: #2c333c;
+    --diag-ok: #57d27a;
+    --diag-ok-bg: #12301c;
+    --diag-warn: #e3b341;
+    --diag-warn-bg: #33290d;
+    --diag-fail: #ff8178;
+    --diag-fail-bg: #3a1714;
+    --diag-accent: #6cb6ff;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--diag-bg);
+  color: var(--diag-text);
+  font-family: var(--diag-font);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.diag {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.diag h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+
+.diag h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+
+.diag-lead {
+  margin: 0 0 1.25rem;
+  color: var(--diag-muted);
+}
+
+.diag-section {
+  background: var(--diag-surface);
+  border: 1px solid var(--diag-border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.diag-modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.diag-mode {
+  border: 1px solid var(--diag-border);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.diag-mode-label {
+  color: var(--diag-muted);
+  font-size: 0.85rem;
+}
+
+.diag-mode-value {
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.diag-table-wrap {
+  overflow-x: auto;
+}
+
+.diag table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.diag th,
+.diag td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.45rem 0.5rem;
+  border-top: 1px solid var(--diag-border);
+}
+
+.diag th {
+  width: 12rem;
+  font-weight: 500;
+}
+
+.diag-badge {
+  display: inline-block;
+  min-width: 3.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.diag-badge[data-state='ok'] {
+  color: var(--diag-ok);
+  background: var(--diag-ok-bg);
+}
+
+.diag-badge[data-state='warn'] {
+  color: var(--diag-warn);
+  background: var(--diag-warn-bg);
+}
+
+.diag-badge[data-state='fail'] {
+  color: var(--diag-fail);
+  background: var(--diag-fail-bg);
+}
+
+.diag-muted {
+  color: var(--diag-muted);
+}
+
+.diag-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.diag button {
+  min-height: 2.75rem; /* touch target */
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--diag-accent);
+  border-radius: 6px;
+  background: var(--diag-surface);
+  color: var(--diag-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.diag button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.diag textarea {
+  width: 100%;
+  min-height: 12rem;
+  box-sizing: border-box;
+  background: var(--diag-bg);
+  color: var(--diag-text);
+  border: 1px solid var(--diag-border);
+  border-radius: 6px;
+  font-family: var(--diag-mono);
+  font-size: 0.8rem;
+}
+
+.diag code {
+  font-family: var(--diag-mono);
+  font-size: 0.85rem;
+  word-break: break-all;
+}

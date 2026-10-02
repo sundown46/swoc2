@@ -15,3 +15,33 @@
 		}
 	}
 }
+
+# Restricted-network simulation (ARCHITECTURE §6, RNM-001; ROADMAP P0 item 8): same sub-path
+# proxy, but refusing WebSocket upgrades like a restrictive corporate proxy does, so the
+# transport fallback can be tested for real (docs/TESTING.md §3.1). Open
+# http://localhost:6445/swoc2/diag to see the fallback chosen.
+:6445 {
+	route {
+		@websocket header_regexp Upgrade (?i)websocket
+		respond @websocket "WebSocket blocked by test proxy" 403
+		uri strip_prefix /swoc2
+		reverse_proxy host.docker.internal:5080 {
+			header_up X-Forwarded-Prefix /swoc2
+		}
+	}
+}
+
+# As :6445, and additionally refusing SSE (Accept: text/event-stream), leaving only
+# long-polling.
+:6446 {
+	route {
+		@websocket header_regexp Upgrade (?i)websocket
+		respond @websocket "WebSocket blocked by test proxy" 403
+		@sse header_regexp Accept (?i)text/event-stream
+		respond @sse "SSE blocked by test proxy" 403
+		uri strip_prefix /swoc2
+		reverse_proxy host.docker.internal:5080 {
+			header_up X-Forwarded-Prefix /swoc2
+		}
+	}
+}

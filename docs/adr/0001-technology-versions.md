@@ -24,6 +24,9 @@ not just by reading changelog pages.
 | SEDAP-Express reference library | `io.github.uniity-team:sedapexpress` 1.4.8 | Matches the
   bundled ICD (`docs/icd/SEDAP-Express-ICD-for-AI-v1.4.8.md`). **Not actually wired up yet** -
   see "Open items" below and `docs/OPEN_QUESTIONS.md` Q-010. |
+| Spring WebSocket (`spring-boot-starter-websocket`) | managed by Spring Boot 4.1.1 | Plain
+  servlet WebSocket (no STOMP). Added with `/diag` (GEN-010), and the base for the realtime
+  WebSocket transport (ADR 0005). |
 | GeographicLib-Java | 2.1 | For geodesy (ARCHITECTURE §3). |
 | NGA MGRS (Java) | `mil.nga:mgrs` 2.1.3 | Same NGA library family as the JS package, so results
   match across backend and frontend (CLAUDE.md tech stack). |

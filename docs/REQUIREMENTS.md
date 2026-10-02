@@ -4,6 +4,14 @@ Each requirement has an ID and a phase tag (`P0`–`P4`, see ROADMAP.md).
 Status values: `open`, `in-progress`, `done`. Claude Code updates the status when a requirement is
 implemented. Changing the *content* of a requirement needs Leon's approval.
 
+## Implementation status
+
+Only requirements that are not `open` are listed, so the tables below stay untouched.
+
+| ID | Status | Where |
+|---|---|---|
+| GEN-010 | done | `/diag` page (`frontend/apps/web/src/diag/`, `io.swoc2.app.diag`), TESTING.md §1.7 |
+
 ## 0. Glossary
 
 | Term | Meaning |

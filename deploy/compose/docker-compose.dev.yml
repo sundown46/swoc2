@@ -31,7 +31,9 @@ services:
     volumes:
       - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
     ports:
-      - "6443:6443"
+      - "6443:6443" # sub-path proxy
+      - "6445:6445" # same, WebSocket blocked
+      - "6446:6446" # same, WebSocket and SSE blocked
     extra_hosts:
       # Lets Caddy reach the app on the host's own port, however it's being run (mvnw
       # spring-boot:run or `docker run -p 5080:5080`) - Linux needs this explicit mapping,
