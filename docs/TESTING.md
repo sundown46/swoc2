@@ -386,7 +386,14 @@ OIDC discovery document from Keycloak otherwise).
   image with no Keycloak configured at all (exactly §1.1's own test) crashed the JVM outright
   instead of booting, because Spring Boot's OAuth2 client resolves the Keycloak registration -
   including a live discovery call to the issuer - eagerly at startup (see ADR 0004
-  "Consequences"). Fixed by deferring that call to the first real login attempt. Re-verified
-  both directions: `docker run -p 5080:5080 swoc2:test` with zero env vars now boots cleanly
-  (`/config.json` → 200, `/` → 302 to login, neither crashes), and the full §1.2 login flow for
-  all four test users still works unchanged once Keycloak is actually up.
+  "Consequences"). Fixed by deferring that call to the first real login attempt.
+- **2026-10-02** - Second real incident, found immediately after the above: with the boot crash
+  fixed, a browser hitting `/` in the same no-Keycloak situation instead got stuck in an
+  infinite redirect loop against `/oauth2/authorization/swoc2` (Spring Security's own
+  authorization-request filter swallows the resolution failure and falls through to the same
+  entry point again). Fixed in the entry point itself: resolve the registration *before*
+  redirecting, and render a plain "login unavailable" page (503, no stack trace) when it fails,
+  instead of ever issuing the broken redirect. Re-verified both directions against the real
+  Docker image: `docker run -p 5080:5080 swoc2:test` with zero env vars now returns a clean 503
+  at `/` (`/config.json` still → 200, neither crashes nor loops), and the full §1.2 login flow
+  for all four test users still works unchanged once Keycloak is actually up.

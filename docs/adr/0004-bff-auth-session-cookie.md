@@ -51,3 +51,15 @@ Rationale (ARCHITECTURE §16, D-003):
   connections already get this right via the connection manager's own backoff/isolation,
   ARCHITECTURE §11.2) - eager resolution at context-startup is an easy trap with Spring Boot
   auto-configuration in general, not specific to OAuth2 clients.
+- **Deferring the discovery call was not enough on its own** - a second real incident, found
+  immediately after shipping the above: a browser hitting any page in the same
+  misconfigured/unreachable situation got stuck in an infinite redirect loop against
+  `/oauth2/authorization/swoc2`, because Spring Security's own
+  `OAuth2AuthorizationRequestRedirectFilter` swallows the resolution failure internally and
+  falls through to the same (still-unauthenticated) request handling, which redirects to that
+  same URL again. The fix had to go in the authentication entry point itself: resolve the
+  registration there first, and render a plain, readable "login unavailable" page (HTTP 503,
+  `text/html`, no stack trace - CLAUDE.md "Errors") instead of ever issuing the redirect when
+  it fails. The lesson: when deferring a failure-prone eager resolution into "the first real
+  use" (as above), also check *what that first real use's failure path actually does* - don't
+  assume it fails safely just because it no longer fails at startup.

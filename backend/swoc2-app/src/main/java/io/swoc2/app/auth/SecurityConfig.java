@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,6 +49,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 @EnableMethodSecurity
 class SecurityConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+
     private final String registrationId;
 
     SecurityConfig(OAuth2ClientProperties oAuth2ClientProperties) {
@@ -67,7 +71,8 @@ class SecurityConfig {
                 .oauth2Login(
                         oauth2 -> oauth2.userInfoEndpoint(info -> info.oidcUserService(roleMappingOidcUserService())))
                 .logout(logout -> logout.logoutSuccessHandler(oidcLogoutSuccessHandler(clientRegistrationRepository)))
-                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(authenticationEntryPoint()));
+                .exceptionHandling(exceptions ->
+                        exceptions.authenticationEntryPoint(authenticationEntryPoint(clientRegistrationRepository)));
         return http.build();
     }
 
@@ -78,19 +83,47 @@ class SecurityConfig {
      * plain {@code curl} request with no {@code Accept} header fell through to the API's
      * problem+json handler even for {@code /}). {@code /api/**} always gets problem+json
      * (CLAUDE.md "Errors"); everything else redirects to the OIDC login, matching what a
-     * browser navigating to any page needs.
+     * browser navigating to any page needs - <strong>unless</strong> resolving the
+     * registration itself fails (misconfigured or Keycloak unreachable,
+     * {@link LazyClientRegistrationConfig}), in which case redirecting anyway sent the browser
+     * into an infinite loop against {@code /oauth2/authorization/swoc2} (a real incident: that
+     * filter swallows the resolution failure and the request falls through to this same entry
+     * point again). Checked once per unauthenticated browser request instead, so it fails as a
+     * single readable page, never a stack trace or a loop.
      */
-    private AuthenticationEntryPoint authenticationEntryPoint() {
+    private AuthenticationEntryPoint authenticationEntryPoint(
+            ClientRegistrationRepository clientRegistrationRepository) {
         AuthenticationEntryPoint apiEntryPoint = (request, response, authException) -> {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
             response.getWriter().write("""
                   {"type":"https://swoc2.example/problems/unauthenticated","title":"Unauthenticated","status":401}""");
         };
+        AuthenticationEntryPoint browserLoginEntryPoint =
+                new LoginUrlAuthenticationEntryPoint("/oauth2/authorization/" + registrationId);
+        AuthenticationEntryPoint guardedBrowserEntryPoint = (request, response, authException) -> {
+            try {
+                clientRegistrationRepository.findByRegistrationId(registrationId);
+            } catch (RuntimeException resolutionFailure) {
+                log.error(
+                        "OIDC login unavailable: could not resolve client registration '{}' (misconfigured, or"
+                                + " Keycloak unreachable)",
+                        registrationId,
+                        resolutionFailure);
+                response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
+                response.setContentType(MediaType.TEXT_HTML_VALUE);
+                response.getWriter().write("""
+                                <!doctype html><title>SWOC2 - login unavailable</title>
+                                <p>Login is not available right now. Ask your administrator to check the
+                                SWOC2_OIDC_* configuration and that Keycloak is reachable.</p>""");
+                return;
+            }
+            browserLoginEntryPoint.commence(request, response, authException);
+        };
         LinkedHashMap<RequestMatcher, AuthenticationEntryPoint> entryPoints = new LinkedHashMap<>();
         entryPoints.put(PathPatternRequestMatcher.pathPattern("/api/**"), apiEntryPoint);
         var delegate = new DelegatingAuthenticationEntryPoint(entryPoints);
-        delegate.setDefaultEntryPoint(new LoginUrlAuthenticationEntryPoint("/oauth2/authorization/" + registrationId));
+        delegate.setDefaultEntryPoint(guardedBrowserEntryPoint);
         return delegate;
     }
 
