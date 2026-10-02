@@ -5,7 +5,7 @@ spring:
     name: swoc2
 
 server:
-  port: ${SWOC2_HTTP_PORT:8080}
+  port: ${SWOC2_HTTP_PORT:5080}
 
 logging:
   level:

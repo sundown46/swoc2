@@ -26,5 +26,5 @@ RUN ./mvnw -q -DskipTests package
 FROM eclipse-temurin:25-jre AS runtime
 WORKDIR /app
 COPY --from=backend-build /src/backend/swoc2-app/target/swoc2-app.jar app.jar
-EXPOSE 8080
+EXPOSE 5080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

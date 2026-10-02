@@ -43,14 +43,14 @@ remote command, just forward):
 
 ```bash
 ssh -N \
-  -L 8080:localhost:8080 \
-  -L 8443:localhost:8443 \
-  -L 8081:localhost:8081 \
+  -L 5080:localhost:5080 \
+  -L 5443:localhost:5443 \
+  -L 5081:localhost:5081 \
   swoc2-vps
 ```
 
-- `8080` → the SWOC2 app's own port (`SWOC2_HTTP_PORT`, direct, no proxy).
-- `8443`/`8081` → reserved for the Caddy reverse-proxy tests (§3.3) and dev Keycloak (§2's future
+- `5080` → the SWOC2 app's own port (`SWOC2_HTTP_PORT`, direct, no proxy).
+- `5443`/`5081` → reserved for the Caddy reverse-proxy tests (§3.3) and dev Keycloak (§2's future
   steps) once those exist; add more `-L` flags as new services come up. Harmless to forward a
   port nothing is listening on yet.
 
@@ -87,16 +87,16 @@ Covers: PR #1 (`feat/p0-repo-skeleton-ci-adrs`).
    git fetch origin
    git checkout main              # or the PR branch you're reviewing
    docker build -f deploy/docker/Dockerfile -t swoc2:test .
-   docker run -d --name swoc2-test -p 8080:8080 swoc2:test
+   docker run -d --name swoc2-test -p 5080:5080 swoc2:test
    docker logs -f swoc2-test
    ```
    **Expected log output**, ending with (exact lines will vary only in timestamp/PID):
    ```
-   Tomcat started on port 8080 (http) with context path '/'
+   Tomcat started on port 5080 (http) with context path '/'
    Started Swoc2Application in ... seconds
    ```
    Press Ctrl+C to stop following logs (the container keeps running).
-3. From your **laptop browser** (tunnel from §0.2 must be up): open `http://localhost:8080/`.
+3. From your **laptop browser** (tunnel from §0.2 must be up): open `http://localhost:5080/`.
    **Expected:** HTTP 200, a plain page with the heading **"SWOC2"** and the text "SEDAP Web
    Operated C2 - repository skeleton." (This is Spring Boot's default static-resource serving of
    the built SPA's `index.html` - there is no real UI yet, that's expected at this phase.)
@@ -112,7 +112,7 @@ Covers: ROADMAP P0 items 4 (SPA/`config.json`/base-path serving) and 5 (BFF logi
 Keycloak realm, role-protected endpoints). Neither exists yet.
 
 Once implemented, this section will cover, as separate numbered checks:
-1. Plain HTTP, root path (`http://localhost:8080/`): login redirects to the dev Keycloak login
+1. Plain HTTP, root path (`http://localhost:5080/`): login redirects to the dev Keycloak login
    page, a test user (see §3.4) can log in, and lands back on the SWOC2 UI with their role's
    features visible (e.g. an Operator sees edit controls, a Viewer does not).
 2. The same, but behind Caddy on a sub-path (see §3.3 for the proxy setup) - the login
@@ -281,12 +281,12 @@ Once both exist:
 1. On the VPS, start the stack with the sub-path example (exact compose file/profile name TBD
    when item 4 lands - check `deploy/compose/README.md` for the current name):
    ```bash
-   SWOC2_BASE_PATH=/swoc2/ SWOC2_PUBLIC_URL=http://localhost:8443/swoc2/ \
+   SWOC2_BASE_PATH=/swoc2/ SWOC2_PUBLIC_URL=http://localhost:5443/swoc2/ \
      docker compose -f deploy/compose/docker-compose.yml up -d
    ```
 2. Forward Caddy's port instead of the app's own port - update §0.2's tunnel to map Caddy's port
-   (e.g. `-L 8443:localhost:8443`) and open `http://localhost:8443/swoc2/` in your laptop
-   browser (**not** `:8080`, which bypasses the proxy and the sub-path entirely).
+   (e.g. `-L 5443:localhost:5443`) and open `http://localhost:5443/swoc2/` in your laptop
+   browser (**not** `:5080`, which bypasses the proxy and the sub-path entirely).
 3. **Expected:** the app loads with every asset, API call and realtime connection resolving
    under `/swoc2/...` - open DevTools → Network and confirm there are no requests going to the
    bare root (`/assets/...` instead of `/swoc2/assets/...` would mean the relative-base build
@@ -323,3 +323,9 @@ Dev-only credentials (never reuse these conventions for a hosted/production real
   every other Phase 0 criterion is marked ⏳ pending items 4-10. Commands in §1.1 and the
   WebGL-disabling technique in §3.2 were run against a real build before being written down;
   everything marked ⏳ is a procedure to fill in later, not something that has been tried.
+- **2026-10-02** - Renumbered every port in this guide: `8080`→`5080` (app),
+  `8443`→`5443` (Caddy sub-path test), `8081`→`5081` (reserved for dev Keycloak), because
+  `8080`/`8443`/`8081` are already in use by other services on the VPS. `SWOC2_HTTP_PORT`'s
+  default changed to match (`.env.example`, `application.yml`, `ARCHITECTURE.md` §12,
+  `deploy/docker/Dockerfile`'s `EXPOSE`) - re-verified §1.1's commands end to end against the new
+  port before updating this file.
