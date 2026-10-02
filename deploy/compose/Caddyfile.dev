@@ -1,0 +1,17 @@
+# Dev-only sub-path reverse-proxy test (ROADMAP P0 item 4: "SWOC2_BASE_PATH and the forwarded
+# headers work, tested behind Caddy, also on a sub-path. HTTP mode works without certificates.")
+# Deliberately plain HTTP, no TLS - the publicly-trusted-certificate reverse proxy for
+# locked-down service computers (GEN-014, ADR 0014) is a separate, P3 concern.
+#
+# Run the app itself with SWOC2_BASE_PATH=/swoc2/ wherever it's reachable on the host
+# (docs/TESTING.md §3.3), then this strips the /swoc2 prefix before forwarding and tells the
+# app it did, via X-Forwarded-Prefix, so Spring's ForwardedHeaderFilter (toggled by
+# SWOC2_FORWARDED_HEADERS) regenerates redirects - notably the OAuth2 login callback - with the
+# prefix put back on.
+:5443 {
+	handle_path /swoc2/* {
+		reverse_proxy host.docker.internal:5080 {
+			header_up X-Forwarded-Prefix /swoc2
+		}
+	}
+}

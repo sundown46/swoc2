@@ -50,9 +50,10 @@ ssh -N \
 ```
 
 - `5080` → the SWOC2 app's own port (`SWOC2_HTTP_PORT`, direct, no proxy).
-- `5443`/`5081` → reserved for the Caddy reverse-proxy tests (§3.3) and dev Keycloak (§2's future
-  steps) once those exist; add more `-L` flags as new services come up. Harmless to forward a
-  port nothing is listening on yet.
+- `5443` → the dev Caddy sub-path test (§3.3).
+- `5081` → the dev Keycloak (§3.4). Its admin console also lives here
+  (`http://localhost:5081/admin`, `admin`/`admin` - dev-only, never reuse that password
+  anywhere real).
 
 Everything below assumes this tunnel is up and you open URLs as `http://localhost:<forwarded
 port>/...` in your laptop browser.
@@ -106,23 +107,57 @@ Covers: PR #1 (`feat/p0-repo-skeleton-ci-adrs`).
    docker rmi swoc2:test
    ```
 
-### 1.2 Login works with dev Keycloak over plain HTTP and behind Caddy, also on a sub-path ⏳
+### 1.2 Login works with dev Keycloak over plain HTTP and behind Caddy, also on a sub-path ✅
 
 Covers: ROADMAP P0 items 4 (SPA/`config.json`/base-path serving) and 5 (BFF login, dev
-Keycloak realm, role-protected endpoints). Neither exists yet.
+Keycloak realm, role-protected endpoints). There is still no real UI beyond the placeholder
+page (that's P1), so "logged in" here is verified via the JSON test endpoints, not by reading
+the page - that's enough to prove the actual P0 criterion.
 
-Once implemented, this section will cover, as separate numbered checks:
-1. Plain HTTP, root path (`http://localhost:5080/`): login redirects to the dev Keycloak login
-   page, a test user (see §3.4) can log in, and lands back on the SWOC2 UI with their role's
-   features visible (e.g. an Operator sees edit controls, a Viewer does not).
-2. The same, but behind Caddy on a sub-path (see §3.3 for the proxy setup) - the login
-   redirect, the session cookie, and every asset/API URL must keep working with
-   `SWOC2_BASE_PATH` set to something other than `/`.
-3. A role-protected test endpoint rejects a logged-in user whose role doesn't have access
-   (expect `403`, `application/problem+json`, no stack trace - CLAUDE.md "Errors").
-
-**Do not mark this ✅ until all three have actually been run against a real dev Keycloak**, not
-just code-reviewed.
+1. Start the dev Keycloak (see §3.4 for what's in the realm) and the app:
+   ```bash
+   ssh swoc2-vps
+   cd /data/projects/swoc2
+   docker compose -f deploy/compose/docker-compose.dev.yml up -d keycloak
+   # wait ~10s for Keycloak to come up, then from another terminal on the VPS:
+   cd backend && ./mvnw -q install -DskipTests   # once, so the reactor siblings resolve
+   cd swoc2-app
+   SWOC2_OIDC_ISSUER_URI=http://localhost:5081/realms/swoc2-dev \
+   SWOC2_OIDC_CLIENT_ID=swoc2 \
+   SWOC2_OIDC_CLIENT_SECRET=dev-only-swoc2-secret \
+     ../mvnw spring-boot:run
+   ```
+2. **Plain HTTP, root path.** From your **laptop browser** (tunnel from §0.2 up): open
+   `http://localhost:5080/`. **Expected:** redirected to the Keycloak login page at
+   `http://localhost:5081/realms/swoc2-dev/...`. Log in as `commander1` / `swoc2dev` (§3.4).
+   **Expected:** redirected back to `http://localhost:5080/` with a session cookie set (check
+   DevTools → Application → Cookies: `JSESSIONID`, `HttpOnly`). Open
+   `http://localhost:5080/api/test/whoami` in the same browser/tab. **Expected:** JSON body
+   containing `"username":"commander1"` and `"authorities"` including `"ROLE_COMMANDER"`.
+3. **Role hierarchy and role-protected endpoints.** Still as `commander1`:
+   `http://localhost:5080/api/test/viewer-or-higher` → **expected** `200`,
+   `{"ok":true,...}` (a Commander satisfies a Viewer-level check via the role hierarchy,
+   REQUIREMENTS AUTH-002). `http://localhost:5080/api/test/admin-only` → **expected** `403`
+   with an `application/problem+json` body (`"status":403,"type":"https://swoc2.example/
+   problems/forbidden"`), no stack trace. Repeat as `admin1` - `admin-only` now returns `200`.
+4. **Unauthenticated API vs. browser navigation.** Log out
+   (`http://localhost:5080/logout`, confirm the logout page) or use a private/incognito window.
+   `curl -i http://localhost:5080/api/test/whoami` → **expected** `401`,
+   `application/problem+json`. Opening `http://localhost:5080/` in the browser (no `Accept:
+   application/json`) still **redirects to login** rather than showing that same 401 - the two
+   paths are deliberately handled differently (see `SecurityConfig` for why).
+5. **Behind Caddy, on a sub-path.** Stop the app (Ctrl+C) and restart it with
+   `SWOC2_BASE_PATH=/swoc2/` added to the env vars from step 1, then also bring up Caddy:
+   ```bash
+   docker compose -f deploy/compose/docker-compose.dev.yml up -d caddy
+   ```
+   From your laptop browser, open `http://localhost:5443/swoc2/` (**not** `:5080`, which
+   bypasses the proxy entirely) and repeat step 2's login as `viewer1` / `swoc2dev`. **Expected:**
+   same result, entirely under the `/swoc2/` prefix throughout - check DevTools → Network that
+   the redirect to Keycloak carries `redirect_uri=http://localhost:5443/swoc2/login/oauth2/
+   code/swoc2` (not the bare `:5080` URL), and that `http://localhost:5443/swoc2/config.json`
+   returns `{"basePath":"/swoc2/"}`.
+6. Clean up: `docker compose -f deploy/compose/docker-compose.dev.yml down`.
 
 ### 1.3 The 100k spike reaches NFR-001 with WebGL; Canvas fallback is documented ⏳
 
@@ -271,48 +306,58 @@ offline, GEN-002) or check `about:support` (Firefox) / `chrome://gpu` (Chrome) f
 unavailable". Once `/diag` (GEN-010) exists, it reports this directly for the exact browser SWOC2
 will run in - prefer that once available.
 
-### 3.3 Testing the sub-path setup behind Caddy
+### 3.3 Testing the sub-path setup behind Caddy ✅
 
-Status: ⏳ `SWOC2_BASE_PATH` support (ROADMAP P0 item 4) and the Caddy compose example
-(`deploy/compose/`, still just a placeholder README) don't exist yet. This records the intended
-test procedure.
+The app always answers on `/` internally; `deploy/compose/Caddyfile.dev` strips the `/swoc2`
+prefix before forwarding (`handle_path`) and adds `X-Forwarded-Prefix: /swoc2` so Spring's
+`ForwardedHeaderFilter` (toggled by `SWOC2_FORWARDED_HEADERS`, on by default) puts the prefix
+back onto any URL it generates - in particular the OAuth2 login callback, which is the part
+that actually breaks if forwarded-prefix handling is wrong (verified: without it, Keycloak
+redirects back to the bare `:5080` URL, which 404s through the proxy).
 
-Once both exist:
-1. On the VPS, start the stack with the sub-path example (exact compose file/profile name TBD
-   when item 4 lands - check `deploy/compose/README.md` for the current name):
+1. Run the app with `SWOC2_BASE_PATH=/swoc2/` set (see §1.2 step 5 for the full env var list),
+   and bring up Caddy:
    ```bash
-   SWOC2_BASE_PATH=/swoc2/ SWOC2_PUBLIC_URL=http://localhost:5443/swoc2/ \
-     docker compose -f deploy/compose/docker-compose.yml up -d
+   docker compose -f deploy/compose/docker-compose.dev.yml up -d caddy
    ```
-2. Forward Caddy's port instead of the app's own port - update §0.2's tunnel to map Caddy's port
-   (e.g. `-L 5443:localhost:5443`) and open `http://localhost:5443/swoc2/` in your laptop
-   browser (**not** `:5080`, which bypasses the proxy and the sub-path entirely).
-3. **Expected:** the app loads with every asset, API call and realtime connection resolving
-   under `/swoc2/...` - open DevTools → Network and confirm there are no requests going to the
-   bare root (`/assets/...` instead of `/swoc2/assets/...` would mean the relative-base build
-   (ARCHITECTURE §12) or `SWOC2_FORWARDED_HEADERS` handling is broken).
-4. Also repeat §1.2's login check through this same sub-path URL - that's the actual P0
-   acceptance criterion; the sub-path loading correctly is a precondition for it, not the whole
-   check.
+   `Caddyfile.dev` reaches the app via `host.docker.internal:5080` regardless of whether it's
+   running directly on the VPS (`mvnw spring-boot:run`) or as the `swoc2:test` container from
+   §1.1 (`-p 5080:5080`) - either way works.
+2. Forward Caddy's port (`-L 5443:localhost:5443`, already in §0.2's tunnel) and open
+   `http://localhost:5443/swoc2/` in your laptop browser (**not** `:5080`, which bypasses the
+   proxy and the sub-path entirely).
+3. **Expected:** `http://localhost:5443/swoc2/config.json` returns `{"basePath":"/swoc2/"}`,
+   and the full login flow (§1.2 step 5) works entirely under the `/swoc2/` prefix.
+4. This dev setup is deliberately plain HTTP, no TLS (GEN-003's "HTTP mode works without
+   certificates", exercised by this exact test). The publicly-trusted-certificate reverse proxy
+   for locked-down service computers (GEN-014) is a separate, P3 concern - don't conflate the
+   two when this section eventually needs a P3 companion.
 
-### 3.4 Test users per role
+### 3.4 Test users per role ✅
 
-Status: ⏳ no Keycloak realm exists yet (ROADMAP P0 item 5). REQUIREMENTS.md AUTH-002 defines
-four roles: **Viewer**, **Operator**, **Commander**, **Admin** (each including everything the
-previous one can do, plus more).
-
-Once the dev Keycloak realm export (`deploy/keycloak/`) lands, this table must be replaced with
-the **actual** seeded usernames/passwords from that realm import (never invent credentials here
-that don't match it):
+Seeded by `deploy/keycloak/realm-export.json` (realm `swoc2-dev`), imported automatically when
+the `keycloak` service in `docker-compose.dev.yml` starts (`start-dev --import-realm`). Roles
+are client roles of the `swoc2` client (REQUIREMENTS AUTH-002); the hierarchy (admin > commander
+> operator > viewer, verified in §1.2 step 3) means each user below can also do everything the
+rows above it can:
 
 | Role | Username | Password | Can test |
 |---|---|---|---|
-| Viewer | _TBD_ | _TBD_ | Read-only: view the picture, chat; no edit/command controls visible. |
-| Operator | _TBD_ | _TBD_ | Viewer + edit contacts (CAC overrides), chat, draw/share plans, own contacts. |
-| Commander | _TBD_ | _TBD_ | Operator + send COMMANDs to OWNUNITs. |
-| Admin | _TBD_ | _TBD_ | Commander + the admin dashboard (users, connections, wipe, audit log). |
+| Viewer | `viewer1` | `swoc2dev` | Read-only: view the picture, chat; no edit/command controls visible. |
+| Operator | `operator1` | `swoc2dev` | Viewer + edit contacts (CAC overrides), chat, draw/share plans, own contacts. |
+| Commander | `commander1` | `swoc2dev` | Operator + send COMMANDs to OWNUNITs. |
+| Admin | `admin1` | `swoc2dev` | Commander + the admin dashboard (users, connections, wipe, audit log). |
 
-Dev-only credentials (never reuse these conventions for a hosted/production realm).
+None of the role-gated *features* above exist yet (P1/P2) - only the role mapping itself is
+testable right now, via `/api/test/viewer-or-higher` and `/api/test/admin-only` (§1.2).
+
+Dev-only credentials, realm `sslRequired: none`. Never reuse this realm export's secrets or
+password convention for a hosted or production instance (ADR 0015).
+
+There's also a `swoc2-invite-service` service account in the realm (AUTH-003's future invite
+flow) - not used by any endpoint yet, so there's nothing to manually test about it beyond "the
+realm imported without errors" (§1.2 step 1 already proves that, since the app couldn't get an
+OIDC discovery document from Keycloak otherwise).
 
 ---
 
@@ -329,3 +374,11 @@ Dev-only credentials (never reuse these conventions for a hosted/production real
   default changed to match (`.env.example`, `application.yml`, `ARCHITECTURE.md` §12,
   `deploy/docker/Dockerfile`'s `EXPOSE`) - re-verified §1.1's commands end to end against the new
   port before updating this file.
+- **2026-10-02** - §1.2 (login via dev Keycloak, plain HTTP and behind Caddy on a sub-path),
+  §3.3 and §3.4 flipped to ✅: ROADMAP P0 items 4 and 5 are implemented (BFF OIDC login,
+  Keycloak client-role → Spring authority mapping with the AUTH-002 hierarchy, role-protected
+  test endpoints, `config.json`, forwarded-headers/sub-path handling, the dev Keycloak realm).
+  All of §1.2's steps were actually run end to end with curl simulating the full browser
+  authorization-code+PKCE flow against a real Keycloak 26.8 container, for all four test users,
+  both directly and through the Caddy sub-path - not just read off the code. §3.1 (realtime
+  transports) and §1.3-1.6/P0 items 6-10 are still ⏳, unaffected by this change.
