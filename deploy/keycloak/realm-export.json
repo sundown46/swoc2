@@ -27,7 +27,7 @@
       "secret": "dev-only-swoc2-secret",
       "redirectUris": [
         "http://localhost:5080/*",
-        "http://localhost:5443/swoc2/*"
+        "http://localhost:6443/swoc2/*"
       ],
       "webOrigins": ["+"]
     },

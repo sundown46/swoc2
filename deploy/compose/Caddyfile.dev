@@ -8,7 +8,7 @@
 # app it did, via X-Forwarded-Prefix, so Spring's ForwardedHeaderFilter (toggled by
 # SWOC2_FORWARDED_HEADERS) regenerates redirects - notably the OAuth2 login callback - with the
 # prefix put back on.
-:5443 {
+:6443 {
 	handle_path /swoc2/* {
 		reverse_proxy host.docker.internal:5080 {
 			header_up X-Forwarded-Prefix /swoc2

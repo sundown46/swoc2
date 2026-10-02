@@ -44,13 +44,13 @@ remote command, just forward):
 ```bash
 ssh -N \
   -L 5080:localhost:5080 \
-  -L 5443:localhost:5443 \
+  -L 6443:localhost:6443 \
   -L 5081:localhost:5081 \
   swoc2-vps
 ```
 
 - `5080` → the SWOC2 app's own port (`SWOC2_HTTP_PORT`, direct, no proxy).
-- `5443` → the dev Caddy sub-path test (§3.3).
+- `6443` → the dev Caddy sub-path test (§3.3).
 - `5081` → the dev Keycloak (§3.4). Its admin console also lives here
   (`http://localhost:5081/admin`, `admin`/`admin` - dev-only, never reuse that password
   anywhere real).
@@ -151,11 +151,11 @@ the page - that's enough to prove the actual P0 criterion.
    ```bash
    docker compose -f deploy/compose/docker-compose.dev.yml up -d caddy
    ```
-   From your laptop browser, open `http://localhost:5443/swoc2/` (**not** `:5080`, which
+   From your laptop browser, open `http://localhost:6443/swoc2/` (**not** `:5080`, which
    bypasses the proxy entirely) and repeat step 2's login as `viewer1` / `swoc2dev`. **Expected:**
    same result, entirely under the `/swoc2/` prefix throughout - check DevTools → Network that
-   the redirect to Keycloak carries `redirect_uri=http://localhost:5443/swoc2/login/oauth2/
-   code/swoc2` (not the bare `:5080` URL), and that `http://localhost:5443/swoc2/config.json`
+   the redirect to Keycloak carries `redirect_uri=http://localhost:6443/swoc2/login/oauth2/
+   code/swoc2` (not the bare `:5080` URL), and that `http://localhost:6443/swoc2/config.json`
    returns `{"basePath":"/swoc2/"}`.
 6. Clean up: `docker compose -f deploy/compose/docker-compose.dev.yml down`.
 
@@ -323,10 +323,10 @@ redirects back to the bare `:5080` URL, which 404s through the proxy).
    `Caddyfile.dev` reaches the app via `host.docker.internal:5080` regardless of whether it's
    running directly on the VPS (`mvnw spring-boot:run`) or as the `swoc2:test` container from
    §1.1 (`-p 5080:5080`) - either way works.
-2. Forward Caddy's port (`-L 5443:localhost:5443`, already in §0.2's tunnel) and open
-   `http://localhost:5443/swoc2/` in your laptop browser (**not** `:5080`, which bypasses the
+2. Forward Caddy's port (`-L 6443:localhost:6443`, already in §0.2's tunnel) and open
+   `http://localhost:6443/swoc2/` in your laptop browser (**not** `:5080`, which bypasses the
    proxy and the sub-path entirely).
-3. **Expected:** `http://localhost:5443/swoc2/config.json` returns `{"basePath":"/swoc2/"}`,
+3. **Expected:** `http://localhost:6443/swoc2/config.json` returns `{"basePath":"/swoc2/"}`,
    and the full login flow (§1.2 step 5) works entirely under the `/swoc2/` prefix.
 4. This dev setup is deliberately plain HTTP, no TLS (GEN-003's "HTTP mode works without
    certificates", exercised by this exact test). The publicly-trusted-certificate reverse proxy
@@ -397,3 +397,8 @@ OIDC discovery document from Keycloak otherwise).
   Docker image: `docker run -p 5080:5080 swoc2:test` with zero env vars now returns a clean 503
   at `/` (`/config.json` still → 200, neither crashes nor loops), and the full §1.2 login flow
   for all four test users still works unchanged once Keycloak is actually up.
+- **2026-10-02** - Renumbered the Caddy sub-path test port again: `5443`→`6443`, because `5443`
+  turned out to already be in use by AdGuard on the VPS. Only the Caddy port changes - `5080`
+  (app) and `5081` (Keycloak) are unaffected. Updated `deploy/compose/Caddyfile.dev`,
+  `docker-compose.dev.yml`'s port mapping, and the `swoc2` client's registered redirect URI in
+  `deploy/keycloak/realm-export.json` to match.
