@@ -1,0 +1,12 @@
+# Base configuration. Every setting is overridable via environment variables
+# (CLAUDE.md "Non-negotiable principles" #8; full list in ARCHITECTURE §12 and .env.example).
+spring:
+  application:
+    name: swoc2
+
+server:
+  port: ${SWOC2_HTTP_PORT:5080}
+
+logging:
+  level:
+    root: ${SWOC2_LOG_LEVEL:INFO}

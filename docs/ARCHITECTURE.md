@@ -329,9 +329,9 @@ All variables are documented in `.env.example`. Defaults are chosen for local de
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `SWOC2_HTTP_PORT` | `8080` | Port for SPA + API + realtime |
+| `SWOC2_HTTP_PORT` | `5080` | Port for SPA + API + realtime |
 | `SWOC2_BASE_PATH` | `/` | Sub-path when behind a reverse proxy (e.g. `/swoc2`) |
-| `SWOC2_PUBLIC_URL` | `http://localhost:8080` | External URL (redirects, cookie Secure auto-detect) |
+| `SWOC2_PUBLIC_URL` | `http://localhost:5080` | External URL (redirects, cookie Secure auto-detect) |
 | `SWOC2_FORWARDED_HEADERS` | `true` | Trust `X-Forwarded-*` / `Forwarded` |
 | `SWOC2_COOKIE_SECURE` | `auto` | `auto` / `true` / `false` |
 | `SWOC2_DB_URL` / `_USER` / `_PASSWORD` | — | PostgreSQL |
