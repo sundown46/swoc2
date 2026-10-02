@@ -190,20 +190,37 @@ actually carrying traffic:
 switching networks mid-session (e.g. toggling the WS-blocking profile while connected) falls back
 without the user having to reload the page.
 
-### 1.5 All ICD message types round-trip ⏳
+### 1.5 All ICD message types round-trip ✅
 
-Covers: ROADMAP P0 item 9 (Spike C), `swoc2-sedap`. Not implemented yet - also blocked on
-`docs/OPEN_QUESTIONS.md` Q-010 (the reference library isn't resolvable from Maven Central yet).
+Covers: ROADMAP P0 item 9 (Spike C), `backend/swoc2-sedap`, SDX-001, ADR 0017. This is an
+**automated** check; the manual part is reading what it proves.
 
-Once implemented, this is primarily an **automated** check (`./backend/mvnw -pl swoc2-sedap
-test`, round-trip tests built from ICD examples per `docs/icd/`), not a manual one. The manual
-part: pick a handful of message types from `docs/icd/SEDAP-Express-ICD-for-AI-v1.4.8.md`
-(at least one CONTACT, one OWNUNIT, one COMMAND, one with a deliberately malformed/unknown
-field) and confirm by hand, via the debug console (DBG-001, once it exists) or test logs, that:
-- Well-formed messages decode to the expected domain object and re-encode byte-for-byte (or
-  field-for-field, where the ICD allows reordering).
-- The malformed one is accepted tolerantly (warned, raw value kept) rather than dropped or
-  crashing the connection (SDX-001, CLAUDE.md principle #1).
+1. Run the codec tests (JDK 25, see CLAUDE.md for the toolchain path on the VPS):
+   ```bash
+   ./backend/mvnw -f backend/pom.xml -pl swoc2-sedap -am test
+   ```
+   **Expected:** `BUILD SUCCESS`, about 350 tests in `swoc2-sedap`:
+   - `IcdSamplesTest`: every sample line of the ICD (in
+     `swoc2-sedap/src/test/resources/icd-samples.txt`) decodes with **exactly** the listed
+     warnings, and re-encodes to the identical line. The few samples that are malformed in the ICD
+     itself are marked there and explained in `docs/icd/NOTES.md`.
+   - `RoundTripTest`: for every message type, every COMMAND type (53) and every GRAPHIC shape (12),
+     a message with every field filled is built, encoded, decoded, and yields the same values with
+     no warnings.
+   - `ReferenceLibraryConformanceTest`: the same lines go through the reference library
+     `sedapexpress` 1.4.8, and every value both sides expose must agree. Known library defects
+     (GRAPHIC two-digit types, camera mode spelling) are asserted as *still present*.
+   - `ToleranceTest`: malformed input (bad numbers, out-of-range latitude, garbage header, unknown
+     names/types, extra fields, invalid BASE64, overlong lines, a zip bomb, random mutations of
+     every sample) never throws. Invalid fields stay raw with a warning and the rest is usable.
+   - `CommandSchemasTest`: the declarative COMMAND schema covers every CmdType of ICD §6.8, every
+     lat has a lon in the same pick group, and weapon/destructive commands are flagged for
+     confirmation.
+2. Spot-check by hand: pick any line in `icd-samples.txt`, change one value (e.g. a latitude to
+   `95`) and re-run `-Dtest=IcdSamplesTest`. **Expected:** that line now fails with a warning on
+   exactly that field, and the message is still decoded.
+3. Debug-console view of decode warnings (DBG-001) comes in P1. Until then the warnings are only
+   visible in the tests.
 
 ### 1.6 A crashing example plugin is contained ⏳
 

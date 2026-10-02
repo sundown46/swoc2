@@ -16,10 +16,9 @@
 
   <name>swoc2-sedap</name>
   <description>
-    SEDAP-Express codec and mapping to the domain model (ARCHITECTURE §3, §11). The dependency
-    on the reference library io.github.uniity-team:sedapexpress is added once its Maven
-    coordinates are confirmed resolvable - see docs/OPEN_QUESTIONS.md Q-010. This is also
-    Spike C (ROADMAP P0 item 9), which is out of scope for this change.
+    SEDAP-Express codec (ARCHITECTURE §3, §11): tolerant, schema-driven parsing and generation of
+    every ICD message type, plus the declarative COMMAND schema. The reference library
+    io.github.uniity-team:sedapexpress is used as a conformance oracle in tests (ADR 0017).
   </description>
 
   <dependencies>
@@ -27,6 +26,46 @@
       <groupId>io.swoc2</groupId>
       <artifactId>swoc2-domain</artifactId>
       <version>${project.version}</version>
+    </dependency>
+
+    <!--
+      Reference library, test scope only: every ICD sample and every message our encoder
+      generates is cross-checked against it (ADR 0017). Not on the runtime classpath because of
+      its side effects (stdout banner, global JUL logger at ALL, printStackTrace, shared
+      non-thread-safe Inflater/Deflater) and because it drops unknown/invalid fields, which
+      SDX-001 requires us to keep. Its transitive dependencies that the conformance tests never
+      touch (serial port, MQTT, protobuf, REST JSON) are excluded to keep the test classpath lean.
+    -->
+    <dependency>
+      <groupId>io.github.uniity-team</groupId>
+      <artifactId>sedapexpress</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>io.github.java-native</groupId>
+          <artifactId>jssc</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.scijava</groupId>
+          <artifactId>native-lib-loader</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.eclipse.paho</groupId>
+          <artifactId>org.eclipse.paho.mqttv5.client</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java-util</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.google.code.gson</groupId>
+          <artifactId>gson</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 </project>
