@@ -87,6 +87,10 @@ class SecurityConfig {
                         .permitAll()
                         .anyRequest()
                         .authenticated())
+                // SPA-style CSRF (ARCHITECTURE §7 "CSRF protection applies to state-changing
+                // requests"): token in the readable XSRF-TOKEN cookie, echoed by the SPA in the
+                // X-XSRF-TOKEN header. Needed now for POST /rt/session and /rt/send.
+                .csrf(csrf -> csrf.spa())
                 .oauth2Login(
                         oauth2 -> oauth2.userInfoEndpoint(info -> info.oidcUserService(roleMappingOidcUserService())))
                 .logout(logout -> logout.logoutSuccessHandler(oidcLogoutSuccessHandler(clientRegistrationRepository)))
@@ -141,6 +145,8 @@ class SecurityConfig {
         };
         LinkedHashMap<RequestMatcher, AuthenticationEntryPoint> entryPoints = new LinkedHashMap<>();
         entryPoints.put(PathPatternRequestMatcher.pathPattern("/api/**"), apiEntryPoint);
+        // Realtime endpoints are called by scripts (fetch/EventSource/WebSocket), never navigated to.
+        entryPoints.put(PathPatternRequestMatcher.pathPattern("/rt/**"), apiEntryPoint);
         var delegate = new DelegatingAuthenticationEntryPoint(entryPoints);
         delegate.setDefaultEntryPoint(guardedBrowserEntryPoint);
         return delegate;
