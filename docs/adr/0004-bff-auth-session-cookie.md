@@ -38,3 +38,28 @@ Rationale (ARCHITECTURE §16, D-003):
 - API clients that are not browsers (service accounts, future AI agents, AUTH-006) need a
   separate bearer-token resource-server mode layered on top later; it does not replace the BFF
   cookie for the browser UI.
+- **Spring Boot's auto-configured `ClientRegistrationRepository` resolves the OIDC registration
+  eagerly, during application context startup** - including the live discovery HTTP call to
+  Keycloak's issuer. Left as-is, this means SWOC2 refuses to boot at all (not even
+  `/config.json` or `/actuator/health`) if Keycloak is unreachable or still starting when SWOC2
+  does, or if the OIDC env vars are simply not set yet - confirmed by a real incident: a plain
+  `docker run` of the image with no Keycloak configured crashed the JVM outright. That violates
+  CLAUDE.md principle #1 ("one ... failing [dependency] must never crash the process"), so
+  `LazyClientRegistrationConfig` replaces it with one that defers the discovery call to the
+  first real login attempt instead (memoized afterwards). Keep this in mind for any other
+  external-service integration added later (master-data image providers, MediaMTX, SEDAP
+  connections already get this right via the connection manager's own backoff/isolation,
+  ARCHITECTURE §11.2) - eager resolution at context-startup is an easy trap with Spring Boot
+  auto-configuration in general, not specific to OAuth2 clients.
+- **Deferring the discovery call was not enough on its own** - a second real incident, found
+  immediately after shipping the above: a browser hitting any page in the same
+  misconfigured/unreachable situation got stuck in an infinite redirect loop against
+  `/oauth2/authorization/swoc2`, because Spring Security's own
+  `OAuth2AuthorizationRequestRedirectFilter` swallows the resolution failure internally and
+  falls through to the same (still-unauthenticated) request handling, which redirects to that
+  same URL again. The fix had to go in the authentication entry point itself: resolve the
+  registration there first, and render a plain, readable "login unavailable" page (HTTP 503,
+  `text/html`, no stack trace - CLAUDE.md "Errors") instead of ever issuing the redirect when
+  it fails. The lesson: when deferring a failure-prone eager resolution into "the first real
+  use" (as above), also check *what that first real use's failure path actually does* - don't
+  assume it fails safely just because it no longer fails at startup.

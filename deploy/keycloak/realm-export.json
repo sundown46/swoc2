@@ -1,0 +1,100 @@
+{
+  "realm": "swoc2-dev",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "roles": {
+    "client": {
+      "swoc2": [
+        { "name": "viewer", "description": "Read-only: view the picture and chat." },
+        { "name": "operator", "description": "Viewer + edit contacts, chat, plans, own contacts." },
+        { "name": "commander", "description": "Operator + send COMMANDs to OWNUNITs." },
+        { "name": "admin", "description": "Commander + the admin dashboard." }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "swoc2",
+      "name": "SWOC2",
+      "enabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "secret": "dev-only-swoc2-secret",
+      "redirectUris": [
+        "http://localhost:5080/*",
+        "http://localhost:6443/swoc2/*"
+      ],
+      "webOrigins": ["+"]
+    },
+    {
+      "clientId": "swoc2-invite-service",
+      "name": "SWOC2 invite service account",
+      "enabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "secret": "dev-only-invite-service-secret"
+    }
+  ],
+  "users": [
+    {
+      "username": "viewer1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "viewer1@swoc2.test",
+      "firstName": "Viewer",
+      "lastName": "One",
+      "requiredActions": [],
+      "credentials": [{ "type": "password", "value": "swoc2dev", "temporary": false }],
+      "clientRoles": { "swoc2": ["viewer"] }
+    },
+    {
+      "username": "operator1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "operator1@swoc2.test",
+      "firstName": "Operator",
+      "lastName": "One",
+      "requiredActions": [],
+      "credentials": [{ "type": "password", "value": "swoc2dev", "temporary": false }],
+      "clientRoles": { "swoc2": ["operator"] }
+    },
+    {
+      "username": "commander1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "commander1@swoc2.test",
+      "firstName": "Commander",
+      "lastName": "One",
+      "requiredActions": [],
+      "credentials": [{ "type": "password", "value": "swoc2dev", "temporary": false }],
+      "clientRoles": { "swoc2": ["commander"] }
+    },
+    {
+      "username": "admin1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "admin1@swoc2.test",
+      "firstName": "Admin",
+      "lastName": "One",
+      "requiredActions": [],
+      "credentials": [{ "type": "password", "value": "swoc2dev", "temporary": false }],
+      "clientRoles": { "swoc2": ["admin"] }
+    },
+    {
+      "username": "service-account-swoc2-invite-service",
+      "enabled": true,
+      "serviceAccountClientId": "swoc2-invite-service",
+      "clientRoles": {
+        "realm-management": ["manage-users", "view-users", "query-users"]
+      }
+    }
+  ]
+}

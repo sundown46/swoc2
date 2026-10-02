@@ -3,6 +3,38 @@
 This is the entry point for Claude Code. Read it completely at the start of every session.
 It is intentionally short. The details are in `docs/`.
 
+## Current status (2026-10-02, update this each session)
+
+- **Phase P0**, items 1-5 of 10 done. PR #1 (repo skeleton, CI, ADRs 0001-0016) is merged. PR #2
+  (`feat/auth-bff-keycloak-login`, items 4-5: BFF login against dev Keycloak, `config.json`,
+  sub-path/forwarded-headers handling) is open, labelled `needs-review`, CI green, and Leon has
+  manually verified login end-to-end for all four test roles - **waiting for Leon to merge it**,
+  don't assume it's in `main` yet. Items 6-10 (`/diag`, Spike A/B/C, plugin SDK skeleton) not
+  started.
+- **Real incidents from building/testing PR #2** (full detail in ADR 0004 and its commit
+  history - skim those before touching `SecurityConfig` or `LazyClientRegistrationConfig`):
+  Spring Boot 4.1 / Spring Security 7.1 relocated several classes used here
+  (`AuthenticationPrincipal`, `OAuth2ClientProperties`, `LogoutSuccessHandler`;
+  `AntPathRequestMatcher` is gone, replaced by `PathPatternRequestMatcher`); Keycloak puts
+  client roles on the *access* token only, not the ID token/userinfo; Spring's OAuth2 client
+  auto-config resolves the registration eagerly at boot (a live discovery call), so the app
+  wouldn't start at all without Keycloak reachable until that was deferred; and separately,
+  the OAuth2 login entry point must resolve the registration itself *before* redirecting, or a
+  misconfigured/unreachable Keycloak causes an infinite browser redirect loop, not just an
+  error page.
+- **Leon's VPS specifics** (see `docs/TESTING.md` for the full dev-stack walkthrough): default
+  `java` there is JDK 17, not the pinned 25 - use the Docker image (self-contained JDK) rather
+  than `mvnw spring-boot:run` directly unless `JAVA_HOME` is explicitly set to a JDK 25 install.
+  Ports `8080`/`8443`/`8081` and separately `5443` are already used by other services there
+  (AdGuard uses `5443`) - the project now defaults to `5080` (app) / `5081` (dev Keycloak) /
+  `6443` (Caddy sub-path test) everywhere, not the framework defaults. `docker-compose.dev.yml`
+  has an explicit `name: swoc2-dev` so its containers are named `swoc2-dev-*` and actually
+  findable via `docker ps --filter name=swoc2` - a real mix-up before that fix cost real time.
+- **Open, unresolved:** `docs/OPEN_QUESTIONS.md` Q-010 - `io.github.uniity-team:sedapexpress`
+  isn't resolvable on Maven Central; `swoc2-sedap` exists but doesn't depend on it yet.
+  `typescript-eslint` doesn't support TypeScript 7.0 yet, so the frontend is pinned to
+  TypeScript 6.0.3 instead (ADR 0001), not the nominal "current stable" version.
+
 ## What SWOC2 is
 
 SWOC2 is a web-based Command & Control (C2) HMI. Its core is a **2D tactical map** that shows a

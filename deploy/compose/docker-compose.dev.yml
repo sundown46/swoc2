@@ -1,0 +1,39 @@
+# Dev support stack (CLAUDE.md "Dev stack" command): dev Keycloak with the test realm, and a
+# Caddy instance for the sub-path reverse-proxy test (docs/TESTING.md §1.2/§3.3). The app itself
+# is run separately (./backend/mvnw -pl swoc2-app spring-boot:run, or the Docker image) so it's
+# easy to iterate on without rebuilding this stack.
+#
+#   docker compose -f deploy/compose/docker-compose.dev.yml up -d
+#
+# MediaMTX and the SEDAP test sender are added here when the features that need them land
+# (VID-001 ff., P2; Spike C, ROADMAP P0 item 9).
+#
+# Explicit project `name` below: without it, Compose names the project (and so every container,
+# e.g. `compose-keycloak-1`) after the directory it's run from - which was confusing in practice
+# (a real incident: `docker rm -f <container someone guessed>` didn't touch the actual
+# compose-managed container at all, because it wasn't named what anyone expected).
+# `docker ps --filter name=swoc2` now actually finds these.
+name: swoc2-dev
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    volumes:
+      - ../keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    ports:
+      - "5081:8080"
+
+  caddy:
+    image: caddy:2-alpine
+    volumes:
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
+    ports:
+      - "6443:6443"
+    extra_hosts:
+      # Lets Caddy reach the app on the host's own port, however it's being run (mvnw
+      # spring-boot:run or `docker run -p 5080:5080`) - Linux needs this explicit mapping,
+      # Docker Desktop provides it automatically but the mapping is harmless there too.
+      - "host.docker.internal:host-gateway"
