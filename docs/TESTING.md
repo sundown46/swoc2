@@ -382,3 +382,11 @@ OIDC discovery document from Keycloak otherwise).
   authorization-code+PKCE flow against a real Keycloak 26.8 container, for all four test users,
   both directly and through the Caddy sub-path - not just read off the code. §3.1 (realtime
   transports) and §1.3-1.6/P0 items 6-10 are still ⏳, unaffected by this change.
+- **2026-10-02** - Fixed a real incident reported after the above: a plain `docker run` of the
+  image with no Keycloak configured at all (exactly §1.1's own test) crashed the JVM outright
+  instead of booting, because Spring Boot's OAuth2 client resolves the Keycloak registration -
+  including a live discovery call to the issuer - eagerly at startup (see ADR 0004
+  "Consequences"). Fixed by deferring that call to the first real login attempt. Re-verified
+  both directions: `docker run -p 5080:5080 swoc2:test` with zero env vars now boots cleanly
+  (`/config.json` → 200, `/` → 302 to login, neither crashes), and the full §1.2 login flow for
+  all four test users still works unchanged once Keycloak is actually up.
