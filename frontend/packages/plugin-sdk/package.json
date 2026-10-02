@@ -1,0 +1,16 @@
+{
+  "name": "@swoc2/plugin-sdk",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "echo 'no build step yet' && exit 0",
+    "test": "echo 'no tests yet' && exit 0",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}

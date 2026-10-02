@@ -13,6 +13,7 @@ move to the "Resolved" section, with a pointer to the place where the decision w
 | Q-005 | Master data APIs | Which external providers for vessel and aircraft data/images are acceptable (licence/ToS, attribution)? | MD-005 (P3) | Provider plugins, none enabled by default |
 | Q-006 | Police symbols | Which regulation/symbol set, and the mapping to SIDC for external interfaces? | P4 | Symbol-provider abstraction only |
 | Q-007 | Native SEDAP | Interface definition for the native SEDAP adapter. | SDX-014 (P4) | Adapter SPI only |
+| Q-010 | SEDAP-Express Maven coordinates | `io.github.uniity-team:sedapexpress` (named in CLAUDE.md) is not resolvable from Maven Central as of 2026-10-02 (checked via the Maven Central search API: zero results for both the group and the artifact id). Where is the Java library actually published (Maven Central, GitHub Packages, something else), and what is the real current version? | Spike C (P0 item 9), `swoc2-sedap` | Module exists but does not declare the dependency yet; version pinned in `docs/adr/0001-technology-versions.md` matches the ICD revision only, not a confirmed library release |
 
 ## Deferred
 

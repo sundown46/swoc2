@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.swoc2</groupId>
+  <artifactId>swoc2-parent</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>SWOC2 parent</name>
+  <description>SEDAP Web Operated C2 - backend parent POM.</description>
+
+  <modules>
+    <module>swoc2-domain</module>
+    <module>swoc2-plugin-api</module>
+    <module>swoc2-sedap</module>
+    <module>swoc2-app</module>
+  </modules>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <java.version>25</java.version>
+    <maven.compiler.release>25</maven.compiler.release>
+
+    <!-- Pinned framework and library versions (see docs/adr/0001-technology-versions.md). -->
+    <spring-boot.version>4.1.1</spring-boot.version>
+    <spring-modulith.version>2.1.1</spring-modulith.version>
+    <geographiclib.version>2.1</geographiclib.version>
+    <mgrs.version>2.1.3</mgrs.version>
+    <sedapexpress.version>1.4.8</sedapexpress.version>
+
+    <!-- Code style (see docs/adr/0016-code-style-and-static-analysis.md). -->
+    <spotless.version>2.46.1</spotless.version>
+    <palantir-java-format.version>2.100.0</palantir-java-format.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring-boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.modulith</groupId>
+        <artifactId>spring-modulith-bom</artifactId>
+        <version>${spring-modulith.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>net.sf.geographiclib</groupId>
+        <artifactId>GeographicLib-Java</artifactId>
+        <version>${geographiclib.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>mil.nga</groupId>
+        <artifactId>mgrs</artifactId>
+        <version>${mgrs.version}</version>
+      </dependency>
+      <!--
+        Reference SEDAP-Express library (ARCHITECTURE §1, D-001). Coordinates and availability
+        on Maven Central have not been confirmed against a real deployment yet - see
+        docs/OPEN_QUESTIONS.md Q-010. Modules that need it declare it explicitly once resolvable.
+      -->
+      <dependency>
+        <groupId>io.github.uniity-team</groupId>
+        <artifactId>sedapexpress</artifactId>
+        <version>${sedapexpress.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <!-- Every module gets a test stack; keeps module POMs short. -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+            <release>${maven.compiler.release}</release>
+            <parameters>true</parameters>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <version>${spring-boot.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+      <!--
+        Format check (CLAUDE.md "lint, format ... configs", P0 item 1). Bound to `verify` so
+        `./backend/mvnw verify` fails on unformatted code. Run `./backend/mvnw spotless:apply`
+        to fix. See docs/adr/0016-code-style-and-static-analysis.md.
+      -->
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>${spotless.version}</version>
+        <configuration>
+          <java>
+            <palantirJavaFormat>
+              <version>${palantir-java-format.version}</version>
+            </palantirJavaFormat>
+            <removeUnusedImports/>
+            <importOrder/>
+          </java>
+        </configuration>
+        <executions>
+          <execution>
+            <id>spotless-check</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

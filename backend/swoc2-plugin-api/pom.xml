@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.swoc2</groupId>
+    <artifactId>swoc2-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>swoc2-plugin-api</artifactId>
+  <packaging>jar</packaging>
+
+  <name>swoc2-plugin-api</name>
+  <description>
+    Public, semver-stable SPI for backend plugins (PLG-002). Breaking changes require the
+    "needs-review" PR label (CLAUDE.md). Core code never imports plugin code; plugins depend
+    only on this module.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.swoc2</groupId>
+      <artifactId>swoc2-domain</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+</project>

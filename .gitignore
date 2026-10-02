@@ -1,0 +1,31 @@
+# Secrets and local overrides
+.env
+.env.*.local
+*.pem
+*.key
+
+# Backend (Maven)
+backend/**/target/
+*.class
+
+# Frontend (pnpm / Vite / Vitest)
+frontend/**/node_modules/
+frontend/**/dist/
+frontend/**/coverage/
+frontend/**/.vite/
+
+# Runtime data (SWOC2_DATA_DIR default)
+/data/
+
+# IDEs
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
