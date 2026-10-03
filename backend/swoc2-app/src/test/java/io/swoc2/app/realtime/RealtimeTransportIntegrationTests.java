@@ -173,6 +173,16 @@ class RealtimeTransportIntegrationTests {
         }
     }
 
+    /** The SPA needs the readable XSRF-TOKEN cookie before its first POST (CsrfCookieFilter). */
+    @Test
+    void xsrfCookieIsIssuedOnAnyPage() throws Exception {
+        HttpResponse<String> r =
+                http.send(HttpRequest.newBuilder(uri("/config.json")).build(), HttpResponse.BodyHandlers.ofString());
+
+        assertThat(r.headers().allValues("Set-Cookie"))
+                .anySatisfy(c -> assertThat(c).startsWith("XSRF-TOKEN=").doesNotContainIgnoringCase("HttpOnly"));
+    }
+
     @Test
     void webSocketForUnknownSessionIsClosed4404() throws Exception {
         CompletableFuture<Integer> closed = new CompletableFuture<>();

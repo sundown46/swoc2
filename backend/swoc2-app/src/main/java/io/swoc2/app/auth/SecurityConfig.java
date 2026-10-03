@@ -34,6 +34,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.DelegatingAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
@@ -91,6 +92,7 @@ class SecurityConfig {
                 // requests"): token in the readable XSRF-TOKEN cookie, echoed by the SPA in the
                 // X-XSRF-TOKEN header. Needed now for POST /rt/session and /rt/send.
                 .csrf(csrf -> csrf.spa())
+                .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
                 .oauth2Login(
                         oauth2 -> oauth2.userInfoEndpoint(info -> info.oidcUserService(roleMappingOidcUserService())))
                 .logout(logout -> logout.logoutSuccessHandler(oidcLogoutSuccessHandler(clientRegistrationRepository)))
