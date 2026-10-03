@@ -33,6 +33,14 @@ swoc2:
   base-path: ${SWOC2_BASE_PATH:/}
   forwarded-headers: ${SWOC2_FORWARDED_HEADERS:true}
   oidc-issuer-uri: ${SWOC2_OIDC_ISSUER_URI:}
+  # docs/realtime-protocol.md; defaults also in RealtimeProperties.
+  realtime:
+    heartbeat: ${SWOC2_RT_HEARTBEAT:10s}
+    poll-hold: ${SWOC2_RT_POLL_HOLD:25s}
+    session-ttl: ${SWOC2_RT_SESSION_TTL:60s}
+    buffer-size: ${SWOC2_RT_BUFFER_SIZE:1000}
+    max-sessions-per-user: ${SWOC2_RT_MAX_SESSIONS_PER_USER:10}
+    batch-interval: ${SWOC2_RT_BATCH_INTERVAL:500ms}
 
 logging:
   level:

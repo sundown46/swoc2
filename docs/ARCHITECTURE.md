@@ -355,6 +355,12 @@ All variables are documented in `.env.example`. Defaults are chosen for local de
 | `SWOC2_TLS_CERT_FILE` / `_KEY_FILE` | — | PEM files for `provided` mode |
 | `SWOC2_ADMIN_ALLOWED_CIDRS` | (empty = all) | Optional allowlist for the admin UI and admin API (GEN-015) |
 | `SWOC2_SESSION_TIMEOUT` | `PT12H` | Absolute session lifetime (an idle timeout applies as well) |
+| `SWOC2_RT_HEARTBEAT` | `10s` | Realtime idle heartbeat on WS/SSE (`docs/realtime-protocol.md` §7) |
+| `SWOC2_RT_POLL_HOLD` | `25s` | Maximum hold of a long-poll request |
+| `SWOC2_RT_SESSION_TTL` | `60s` | Lifetime of a realtime session without an attached transport |
+| `SWOC2_RT_BUFFER_SIZE` | `1000` | Replay buffer per realtime session (envelopes) |
+| `SWOC2_RT_MAX_SESSIONS_PER_USER` | `10` | Older realtime sessions of a user are closed beyond this |
+| `SWOC2_RT_BATCH_INTERVAL` | `500ms` | Delta batching interval (2 Hz) |
 
 The SPA reads runtime config (base path, feature flags) from `GET {base}/config.json`, served by the
 backend. This keeps the build artefact identical for every deployment. Vite builds with a relative base.
