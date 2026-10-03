@@ -3,14 +3,16 @@
 This is the entry point for Claude Code. Read it completely at the start of every session.
 It is intentionally short. The details are in `docs/`.
 
-## Current status (2026-10-02, update this each session)
+## Current status (2026-10-03, update this each session)
 
-- **Phase P0**, items 1-5 of 10 done. PR #1 (repo skeleton, CI, ADRs 0001-0016) is merged. PR #2
-  (`feat/auth-bff-keycloak-login`, items 4-5: BFF login against dev Keycloak, `config.json`,
-  sub-path/forwarded-headers handling) is open, labelled `needs-review`, CI green, and Leon has
-  manually verified login end-to-end for all four test roles - **waiting for Leon to merge it**,
-  don't assume it's in `main` yet. Items 6-10 (`/diag`, Spike A/B/C, plugin SDK skeleton) not
-  started.
+- **Phase P0**, items 1-5 of 10 done and merged (PR #1 skeleton/CI/ADRs, PR #2 BFF login,
+  `config.json`, sub-path). Items 6-10 (`/diag`, Spike A/B/C, plugin SDK skeleton) are being
+  worked on autonomously overnight 2026-10-02/03 in the order 6 -> 9 -> 7 -> 8 -> 10; check the
+  open PRs (`gh pr list`) for where that got to. PRs labelled `needs-review` may be stacked on each
+  other - their descriptions say the merge order.
+- **Local toolchain on Leon's VPS:** JDK 25 is at `/opt/jdk25`, Node 24 at `/opt/node24` (system
+  defaults are JDK 17 / Node 18). Prefix commands with
+  `PATH=/opt/node24/bin:/opt/jdk25/bin:$PATH JAVA_HOME=/opt/jdk25`.
 - **Real incidents from building/testing PR #2** (full detail in ADR 0004 and its commit
   history - skim those before touching `SecurityConfig` or `LazyClientRegistrationConfig`):
   Spring Boot 4.1 / Spring Security 7.1 relocated several classes used here
@@ -30,10 +32,9 @@ It is intentionally short. The details are in `docs/`.
   `6443` (Caddy sub-path test) everywhere, not the framework defaults. `docker-compose.dev.yml`
   has an explicit `name: swoc2-dev` so its containers are named `swoc2-dev-*` and actually
   findable via `docker ps --filter name=swoc2` - a real mix-up before that fix cost real time.
-- **Open, unresolved:** `docs/OPEN_QUESTIONS.md` Q-010 - `io.github.uniity-team:sedapexpress`
-  isn't resolvable on Maven Central; `swoc2-sedap` exists but doesn't depend on it yet.
-  `typescript-eslint` doesn't support TypeScript 7.0 yet, so the frontend is pinned to
-  TypeScript 6.0.3 instead (ADR 0001), not the nominal "current stable" version.
+- **Open, unresolved:** `typescript-eslint` doesn't support TypeScript 7.0 yet, so the frontend
+  is pinned to TypeScript 6.0.3 instead (ADR 0001), not the nominal "current stable" version.
+  (Q-010 is resolved: `sedapexpress` 1.4.8 *is* on Maven Central; the search API was wrong.)
 
 ## What SWOC2 is
 
