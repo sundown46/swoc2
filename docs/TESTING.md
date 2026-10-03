@@ -381,18 +381,39 @@ There is no UI for these yet (admin dashboard is M8); test through the browser w
    HTTP there is no `Strict-Transport-Security` (by design). The browser console shows no CSP
    violations on `/`, `/diag`, `spike-render.html`, `spike-realtime.html` and `/api/docs`.
 
-### 2.2 Live picture store, aging, overrides, wipe (M2) ⏳
+### 2.2 SEDAP connections and the live picture (M2 + M3a) ✅ (API level)
 
-Implemented at API level (`/api/picture/...`, see Swagger UI), but there is no way to put contacts
-into the picture by hand until the SEDAP connections and the test sender arrive in M3. Then this
-section gets its steps: contacts appear in `GET /api/picture/contacts`, turn `STALE` after the
-stale time and disappear after the delete time; an operator renames a contact via
-`PUT /api/picture/contacts/{id}/override` and the name survives further updates; an admin wipes
-with `POST /api/picture/wipe` and `{"confirm":"WIPE"}`.
+Still no map UI (M6); test through Swagger UI (`http://localhost:5080/api/docs`, as `admin1`) and the
+JSON endpoints. Setup as §2.1, plus the test sender on the VPS (JDK 17 is enough for it):
 
-Automated coverage: `PictureStoreTest` (identity across updates, cell index, override layer,
-stale/remove races, wipe, classification, 200k upserts in well under a second on the VPS),
-`AgingServiceTest`, `PictureApiTests` (roles, persistence, audit, validation, wipe confirmation).
+```bash
+java tools/sedap-sender/SedapSender.java --mode server --port 50001 --contacts 200 --relative --garbage
+```
+
+1. **Create a connection:** `POST /api/connections` with
+   `{"name":"Simulator","type":"sedap-tcp-client","direction":"BOTH","config":{"host":"127.0.0.1","port":50001}}`.
+   `GET /api/connections/types` shows the available types with their form schemas. Invalid input
+   (empty name, host `bad host!`, port 70000) gives `400` with `fieldErrors` per field.
+2. **Health:** `GET /api/connections` - state `UP`, `messagesInPerSecond` ~200, `lastHeartbeat`
+   set, `errors`/`warnings` counting the garbage lines. Stop the sender (Ctrl+C): state `DOWN` with
+   "retry in N s"; start it again: back to `UP`, `reconnects` increased.
+3. **Picture:** `GET /api/picture/summary` ~201 contacts (incl. the OWNUNIT); `GET
+   /api/picture/contacts?limit=5` shows names, identities and positions moving between calls.
+4. **Debug console data:** enable it in the settings (`debugConsole: {"enabled":true,"roles":["admin"]}`),
+   then `GET /api/debug/messages?limit=50` shows raw lines and the warnings for the bad ones.
+5. **Overrides:** `PUT /api/picture/contacts/{id}/override` with `{"name":"Renamed"}` (as
+   operator or admin): the name stays "Renamed" although the sender keeps sending the old name;
+   `DELETE` the override and the source name is back. Both appear in `GET /api/audit`.
+6. **Aging:** set `aging` to `{"staleAfter":"PT10S","deleteAfter":"PT30S"}`, stop the sender:
+   contacts turn `STALE` after 10 s and disappear after 30 s.
+7. **Wipe:** `POST /api/picture/wipe` with `{"confirm":"WIPE"}` - the picture empties (and refills
+   while the sender runs); without the confirmation it is `400`.
+8. **Server transport:** create a `sedap-tcp-server` connection on port 50002 and run the sender
+   with `--mode client --port 50002`: state goes from `DEGRADED` (no client) to `UP`.
+
+Automated coverage: `SedapConnectionTests` (real TCP: ingest, relative positions, dedup, own
+sender, garbage, delete flag, reconnect, server transport, validation, test endpoint, roles,
+audit), `PictureStoreTest`, `AgingServiceTest`, `PictureApiTests`, `LineReaderTest`.
 
 ---
 

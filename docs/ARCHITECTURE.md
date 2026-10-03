@@ -311,7 +311,8 @@ the full palette needs no hand-written forms.
 A connection consists of a type, a config (JSON Schema validated), a direction (in/out/both), aging
 overrides and a crypto profile (P4). Lifecycle: `disabled → connecting → up → degraded → down`, with
 exponential backoff. Metrics per connection: msgs in/out per second, bytes, errors, last error,
-last message time.
+last message time. Implemented in P1 M3a: SPI `io.swoc2.pluginapi.connection`, runtime and manager
+in `io.swoc2.app.connections`, one file per transport (ADR 0021).
 
 ### 11.3 Routing & loop prevention
 
