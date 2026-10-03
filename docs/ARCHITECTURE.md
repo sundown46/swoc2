@@ -295,9 +295,10 @@ Details:
 
 ### 11.1 Codec
 
-The codec wraps the reference library. Where the library is stricter than needed, a tolerant
-pre-parser keeps unknown fields raw. Every message type is covered by round-trip tests built from
-ICD examples. COMMAND types are described by **declarative schemas** (parameters, types, units,
+SWOC2 has its own tolerant, schema-driven codec (ADR 0017, Spike C): invalid or unknown fields
+are kept raw with a warning, never thrown. The reference library is a test-scoped conformance
+oracle, not a runtime dependency. Every message type, COMMAND type and GRAPHIC shape is covered by
+round-trip tests, and every ICD sample by a decode/re-encode test (`docs/icd/NOTES.md`). COMMAND types are described by **declarative schemas** (parameters, types, units,
 required, map-pickable) in `swoc2-sedap`. The tasking wizard UI is generated from these schemas, so
 the full palette needs no hand-written forms.
 

@@ -22,11 +22,9 @@ not just by reading changelog pages.
 | Spring Boot | 4.1.1 | Current stable; built on Spring Framework 7.0.8. |
 | Spring Modulith | 2.1.1 | The release line compatible with Spring Boot 4.1.x. |
 | SEDAP-Express reference library | `io.github.uniity-team:sedapexpress` 1.4.8 | Matches the
-  bundled ICD (`docs/icd/SEDAP-Express-ICD-for-AI-v1.4.8.md`). **Not actually wired up yet** -
-  see "Open items" below and `docs/OPEN_QUESTIONS.md` Q-010. |
-| Spring WebSocket (`spring-boot-starter-websocket`) | managed by Spring Boot 4.1.1 | Plain
-  servlet WebSocket (no STOMP). Added with `/diag` (GEN-010), and the base for the realtime
-  WebSocket transport (ADR 0005). |
+  bundled ICD (`docs/icd/SEDAP-Express-ICD-for-AI-v1.4.8.md`). Published on Maven Central
+  (confirmed 2026-10-02 via `maven-metadata.xml`, see Q-010). Wired into `swoc2-sedap` with
+  Spike C (ROADMAP P0 item 9). |
 | GeographicLib-Java | 2.1 | For geodesy (ARCHITECTURE §3). |
 | NGA MGRS (Java) | `mil.nga:mgrs` 2.1.3 | Same NGA library family as the JS package, so results
   match across backend and frontend (CLAUDE.md tech stack). |
@@ -76,13 +74,12 @@ newer and stable has shipped by then, when the feature that needs them is built.
   typescript-eslint ships TS 7 support (tracked upstream as
   `typescript-eslint/typescript-eslint#10940`) - re-run `pnpm lint` after bumping and only merge
   the bump once it's clean, don't assume compatibility from changelogs alone.
-- **`io.github.uniity-team:sedapexpress` is not resolvable from Maven Central** (checked via the
-  Maven Central search API on 2026-10-02: zero results for both the group and the artifact id).
-  The version above matches the ICD revision we have, but the real coordinates, the actual
-  repository it's published to (Maven Central, GitHub Packages, or none yet), and whether 1.4.8
-  is even tagged as a library release rather than just an ICD revision, are unconfirmed. Tracked
-  as `docs/OPEN_QUESTIONS.md` Q-010, blocking Spike C (ROADMAP P0 item 9). `swoc2-sedap` is a
-  real Maven module already, but does not declare the dependency yet.
+- **`io.github.uniity-team:sedapexpress`** was first reported as "not resolvable" because the
+  Maven Central *search API* returned zero hits on 2026-10-02. The artefact itself is there
+  (`https://repo1.maven.org/maven2/io/github/uniity-team/sedapexpress/maven-metadata.xml` lists
+  1.3.0-1.4.8). Lesson: verify Maven Central coordinates against `repo1.maven.org` metadata, not
+  only the search API. Its POM pulls in BouncyCastle, Gson, Protobuf, Paho MQTTv5, jssc and
+  native-lib-loader; which of those SWOC2 keeps or excludes is recorded with Spike C.
 - **Maven itself** stays on the 3.9.x line; Maven 4 is not GA.
 
 ## Validation

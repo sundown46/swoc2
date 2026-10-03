@@ -11,13 +11,11 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
-      // Entries: the app, the standalone /diag page (GEN-010) that must load without
+      // Two entries: the app, and the standalone /diag page (GEN-010) that must load without
       // the app, its login or its state.
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         diag: fileURLToPath(new URL('./diag.html', import.meta.url)),
-        // Spike A rendering benchmark (ROADMAP P0 item 7); behind login like the app.
-        'spike-render': fileURLToPath(new URL('./spike-render.html', import.meta.url)),
       },
     },
   },
