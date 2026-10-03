@@ -8,29 +8,24 @@
     <groupId>io.swoc2</groupId>
     <artifactId>swoc2-parent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
+    <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <artifactId>swoc2-plugin-api</artifactId>
+  <artifactId>swoc2-plugin-example</artifactId>
   <packaging>jar</packaging>
 
-  <name>swoc2-plugin-api</name>
+  <name>swoc2-plugin-example</name>
   <description>
-    Public, semver-stable SPI for backend plugins (PLG-002). Breaking changes require the
-    "needs-review" PR label (CLAUDE.md). Core code never imports plugin code; plugins depend
-    only on this module.
+    Trivial example backend plugin (ROADMAP P0 item 10): one normal endpoint, one that throws,
+    one that hangs, and a scheduled task - to prove the plugin host contains failures (PLG-003).
+    Depends only on swoc2-plugin-api. Off by default; enable with SWOC2_PLUGINS_ENABLED=example.
   </description>
 
   <dependencies>
     <dependency>
       <groupId>io.swoc2</groupId>
-      <artifactId>swoc2-domain</artifactId>
+      <artifactId>swoc2-plugin-api</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <!-- Logging facade only (PluginContext.logger()); no Spring in the SPI. -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
     </dependency>
   </dependencies>
 </project>

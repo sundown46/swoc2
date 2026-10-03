@@ -1,0 +1,25 @@
+{
+  "name": "@swoc2/plugin-example",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "description": "Trivial example frontend plugin proving plugin isolation (ROADMAP P0 item 10).",
+  "scripts": {
+    "build": "echo 'built by the app (build-time registration, PLG-004)' && exit 0",
+    "test": "echo 'covered by apps/web plugin host tests' && exit 0",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@swoc2/plugin-sdk": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "react": "19.3.0",
+    "typescript": "6.0.3"
+  }
+}
