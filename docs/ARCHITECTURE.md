@@ -248,7 +248,10 @@ Details:
   no admin UI code.
 - **Isolation:** every SPI call goes through an invoker that applies a timeout, an exception barrier,
   metrics and a circuit breaker. A failing plugin is disabled automatically after repeated errors and
-  shown in plugin health.
+  shown in plugin health. Implemented in P0 (ADR 0019): calls run on virtual threads, `N`
+  consecutive failures switch the plugin to `FAILED`; plugin endpoints live under
+  `/api/plugins/{id}/endpoints/{path}`, health under `GET /api/plugins`, admin switches under
+  `POST /api/plugins/{id}/enable|disable`.
 - **Loading:** P1 discovers plugins via `ServiceLoader` on the classpath. Runtime loading (e.g. PF4J or
   separate processes) is decided in an ADR in P4.
 
@@ -345,6 +348,9 @@ All variables are documented in `.env.example`. Defaults are chosen for local de
 | `SWOC2_SECRET_KEY` | — (required in prod) | Encrypts stored secrets (connection passwords, keys) |
 | `SWOC2_LOG_LEVEL` | `INFO` | |
 | `SWOC2_PROFILE` | `prod` | `dev` enables the debug console by default, dev Keycloak, etc. |
+| `SWOC2_PLUGINS_ENABLED` / `_DISABLED` | (empty) | Plugin ids to force on/off at startup (e.g. `example`) |
+| `SWOC2_PLUGINS_CALL_TIMEOUT` | `5s` | Timeout of every call into a backend plugin |
+| `SWOC2_PLUGINS_MAX_FAILURES` | `3` | Consecutive failures after which a plugin is disabled automatically |
 | `SWOC2_TLS_MODE` | `off` | `off` (plain HTTP or TLS at the proxy) / `provided` / `self-signed` (GEN-013) |
 | `SWOC2_TLS_CERT_FILE` / `_KEY_FILE` | — | PEM files for `provided` mode |
 | `SWOC2_ADMIN_ALLOWED_CIDRS` | (empty = all) | Optional allowlist for the admin UI and admin API (GEN-015) |

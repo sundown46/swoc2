@@ -241,64 +241,43 @@ Covers: ROADMAP P0 item 9 (Spike C), `backend/swoc2-sedap`, SDX-001, ADR 0017. T
 3. Debug-console view of decode warnings (DBG-001) comes in P1. Until then the warnings are only
    visible in the tests.
 
-### 1.6 A crashing example plugin is contained ⏳
+### 1.6 A crashing example plugin is contained ✅
 
-Covers: ROADMAP P0 item 10 (plugin SDK skeletons + one trivial example plugin each). Not
-implemented yet.
+Covers: ROADMAP P0 item 10, PLG-001..003, ADR 0019. Example plugins: backend
+`backend/plugins/example-plugin`, frontend `frontend/plugins/example`.
 
-Once implemented:
-1. **Backend:** enable the example backend plugin, then trigger its deliberate crash (however
-   the example is built to do so - e.g. an admin-triggerable test endpoint). **Expected:** the
-   exception barrier catches it, the app keeps running, the plugin is shown as unhealthy/disabled
-   in plugin health (ADM-008), and no other connection or module is affected.
-2. **Frontend:** enable the example frontend plugin's panel/contribution, trigger its deliberate
-   crash. **Expected:** that contribution's error boundary shows a "plugin failed" placeholder
-   with a reload button; the rest of the UI (other panels, the map) keeps working.
-3. Disable the plugin from the admin dashboard (ADM-008, once it exists) and confirm its
-   contribution disappears cleanly with no leftover errors in the console.
+1. Build the image as in §1.2 and start it with the example plugin switched on (it is off by
+   default): add `-e SWOC2_PLUGINS_ENABLED=example` to the `docker run`.
+2. **Frontend** - open `http://localhost:5080/` and log in (any test user). Below the heading
+   is the plugin shell with a toolbar (*Say hello*, *Throw in handler*), the *Example* panel and the
+   list of installed plugins.
+   - *Say hello* -> a notification "example: Hello from the example plugin".
+   - *Throw in handler* -> a notification "Plugin "Example plugin" failed: ...". Nothing else
+     changes; no uncaught error in the console.
+   - *Crash this panel* -> the panel is replaced by "Plugin “Example plugin” failed: ..." with
+     *Reload* and *Disable plugin*. The toolbar and the rest of the page keep working. *Reload*
+     brings the panel back; *Disable plugin* removes all its contributions and the plugin list shows
+     "disabled after a crash". The checkbox in the list switches it on again.
+3. **Backend** - in the same logged-in browser tab:
+   - `http://localhost:5080/api/plugins` -> JSON list with `example`, state `ENABLED`.
+   - `.../api/plugins/example/endpoints/hello` -> `{"message":"Hello from the example plugin",...}`.
+   - `.../api/plugins/example/endpoints/hang` -> after ~5 s `504` problem+json (timeout).
+   - `.../api/plugins/example/endpoints/crash` three times -> `502` problem+json each time, no stack
+     trace in the response. Then `/api/plugins` shows state `FAILED`, and `hello` answers `503`.
+   - The rest of the app is unaffected: `/config.json`, `/diag` and login keep working.
+   - `docker logs swoc2-test` shows "Plugin example disabled automatically after 3 consecutive
+     failures".
+   - Re-enable as `admin1`: `POST /api/plugins/example/enable` (with the CSRF header; easiest via
+     the browser console once #7 is merged:
+     `fetch('api/plugins/example/enable',{method:'POST',headers:{'X-XSRF-TOKEN':decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)[1])}})`).
+     A non-admin gets `403`.
+4. Light/dark: the placeholder page has no styling yet (P1 brings Mantine); nothing to check.
 
-### 1.7 `/diag` diagnostics page (GEN-010) ✅
-
-Covers: ROADMAP P0 item 6. Not an acceptance bullet of its own, but the tool later sections use
-to check transports and render modes on a given machine (Q-004, Q-009).
-
-1. Build and start the image and the dev Caddy (Keycloak is not needed - `/diag` works without
-   login, and without Keycloak even being reachable):
-   ```bash
-   ssh swoc2-vps
-   cd /data/projects/swoc2
-   docker rm -f swoc2-test 2>/dev/null   # an older test container would hold port 5080
-   docker build -f deploy/docker/Dockerfile -t swoc2:test .
-   docker run -d --name swoc2-test --network host swoc2:test
-   docker compose -f deploy/compose/docker-compose.dev.yml up -d caddy
-   ```
-2. **Direct, plain HTTP.** Laptop browser: `http://localhost:5080/diag`. **Expected:** the page
-   loads without a login redirect. After a few seconds "Resulting modes" shows transport
-   **websocket**, and all four rows under "Network and transports" show **works**. SSE should
-   say "Events streamed as sent (spread ~800 ms)", and long-polling should come back after
-   ~1500 ms. "Map renderer" is **webgl** on a laptop with a GPU. (Headless/VM browsers show
-   **canvas** with WebGL marked **software**, which is the intended result: software WebGL is
-   slower than Canvas.)
-3. **Behind Caddy, sub-path:** `http://localhost:6443/swoc2/diag`. **Expected:** same as step
-   2. Check in DevTools → Network that every request goes to `/swoc2/...`.
-4. **WebSocket blocked:** `http://localhost:6445/swoc2/diag`. **Expected:** WebSocket
-   **fails**, transport **sse**. The browser console shows exactly one error, the browser's
-   own `WebSocket connection ... failed: ... 403`. Browsers always log that and a page cannot
-   suppress it. No other console errors.
-5. **WebSocket and SSE blocked:** `http://localhost:6446/swoc2/diag`. **Expected:** transport
-   **long-poll**.
-6. **Copy report:** on `http://localhost:5080/diag` (localhost counts as a secure context),
-   "Copy report" copies JSON to the clipboard. To see the plain-HTTP fallback, open the page
-   via the VPS's IP/hostname instead of `localhost` (not a secure context): "Secure context"
-   shows **no**, the four features show **limited** with their fallback, and "Copy report"
-   shows a text box with the JSON to copy by hand (GEN-012).
-7. Light and dark mode: switch the OS/browser colour scheme; the page follows it.
-8. Clean up: `docker rm -f swoc2-test`,
-   `docker compose -f deploy/compose/docker-compose.dev.yml down`.
-
-Automated coverage: `DiagProbeTests` (backend: anonymous access, long-poll cap, SSE event
-count, WebSocket echo/message limit/foreign-origin rejection) and `src/diag/*.test.ts(x)`
-(frontend: mode resolution, probe success/failure/timeout/buffering detection, UI).
+Automated coverage: `PluginRegistryTest` (crash, `Error`s, timeout, auto-disable, broken/duplicate/
+incompatible plugins, failing scheduled task, config overrides), `PluginApiTests` (the real example
+plugin over REST), `PluginShell.test.tsx` (render crash, reload, disable, throwing handler, refused
+plugins, failing activate). Verified on the VPS in the built image with a real Keycloak login and
+headless Chromium (2026-10-03).
 
 ## 2. Phase 1 — Live picture MVP
 

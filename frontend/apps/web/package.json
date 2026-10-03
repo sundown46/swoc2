@@ -14,7 +14,9 @@
     "milsymbol": "3.0.4",
     "ol": "10.10.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "@swoc2/plugin-sdk": "workspace:*",
+    "@swoc2/plugin-example": "workspace:*"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "7.0.1",
