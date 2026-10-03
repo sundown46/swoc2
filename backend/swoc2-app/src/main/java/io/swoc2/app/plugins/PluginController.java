@@ -1,5 +1,6 @@
 package io.swoc2.app.plugins;
 
+import io.swoc2.app.audit.AuditLog;
 import io.swoc2.pluginapi.PluginEndpoint;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
@@ -7,8 +8,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -32,17 +31,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/plugins")
 class PluginController {
 
-    private static final Logger audit = LoggerFactory.getLogger("audit.plugins");
     private static final int MAX_BODY_CHARS = 64 * 1024;
 
     private final PluginRegistry registry;
     private final PluginInvoker invoker;
     private final RoleHierarchy roleHierarchy;
+    private final AuditLog auditLog;
 
-    PluginController(PluginRegistry registry, PluginInvoker invoker, RoleHierarchy roleHierarchy) {
+    PluginController(PluginRegistry registry, PluginInvoker invoker, RoleHierarchy roleHierarchy, AuditLog auditLog) {
         this.registry = registry;
         this.invoker = invoker;
         this.roleHierarchy = roleHierarchy;
+        this.auditLog = auditLog;
     }
 
     @GetMapping
@@ -51,15 +51,13 @@ class PluginController {
         return registry.all().stream().map(PluginHandle::health).toList();
     }
 
-    // Audit: the audit module (P1, ADM-00x) replaces these log lines; who/what/when is logged now.
     @PostMapping("/{id}/enable")
     @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<PluginHandle.PluginHealth> enable(@PathVariable String id, Authentication who) {
         PluginHandle handle = registry.get(id).orElseThrow(UnknownPluginException::new);
         PluginState before = handle.state();
         registry.enable(id);
-        audit.info(
-                "user={} action=plugin.enable plugin={} before={} after={}", who.getName(), id, before, handle.state());
+        auditLog.record("plugin.enable", "plugin", id, Map.of("state", before), Map.of("state", handle.state()));
         return ResponseEntity.ok(handle.health());
     }
 
@@ -69,12 +67,7 @@ class PluginController {
         PluginHandle handle = registry.get(id).orElseThrow(UnknownPluginException::new);
         PluginState before = handle.state();
         registry.disable(id);
-        audit.info(
-                "user={} action=plugin.disable plugin={} before={} after={}",
-                who.getName(),
-                id,
-                before,
-                handle.state());
+        auditLog.record("plugin.disable", "plugin", id, Map.of("state", before), Map.of("state", handle.state()));
         return ResponseEntity.ok(handle.health());
     }
 
@@ -94,7 +87,7 @@ class PluginController {
             throw new IllegalArgumentException("Request body too large");
         }
         Object result = call(id, PluginEndpoint.Method.POST, request, payload, who);
-        audit.info("user={} action=plugin.call plugin={} path={}", who.getName(), id, request.getRequestURI());
+        auditLog.record("plugin.call", "plugin", id, null, null, Map.of("path", request.getRequestURI()));
         return result;
     }
 
