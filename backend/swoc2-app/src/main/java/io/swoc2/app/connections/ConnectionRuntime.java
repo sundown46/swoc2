@@ -67,6 +67,11 @@ public final class ConnectionRuntime implements ConnectionContext {
         return definition;
     }
 
+    /** Frame format of this connection's type (selects codec and outbound eligibility). */
+    public String frameFormat() {
+        return type.frameFormat();
+    }
+
     @Override
     public String connectionId() {
         return definition.id().toString();

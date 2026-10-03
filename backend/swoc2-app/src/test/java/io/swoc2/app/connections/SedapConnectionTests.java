@@ -124,8 +124,10 @@ class SedapConnectionTests {
                                         .filter(c -> c.key().connectionId().equals(id.toString()))
                                         .count()
                                 == 3);
+                // Only this connection's contacts: other tests share the same live picture.
                 Contact own = picture.all().stream()
                         .filter(c -> c.kind() == ContactKind.OWNUNIT)
+                        .filter(c -> c.key().connectionId().equals(id.toString()))
                         .findFirst()
                         .orElseThrow();
                 assertThat(own.name()).isEqualTo("Ship one");
