@@ -10,6 +10,7 @@ move to the "Resolved" section, with a pointer to the place where the decision w
 | Q-002 | GOG | Format definition (NASA WorldWind GOG) still to be provided. | PLN-002 (P4) | — |
 | Q-004 | Service computers | Is WebGL available on the target service computers? To be tested with `/diag` once P0 is deployed. | RNM-003 tuning | Canvas fallback with early aggregation |
 | Q-005 | Master data APIs | Which external providers for vessel and aircraft data/images are acceptable (licence/ToS, attribution)? | MD-005 (P3) | Provider plugins, none enabled by default |
+| Q-011 | SEDAP-Express reference library vs. ICD | The reference library v1.4.8 cannot parse ICD-conformant GRAPHIC messages (it only accepts one-digit GraphicTypes, the ICD writes `08`/`0A`), and expects camera mode `DL/IR/LI` instead of the ICD's `DayLight/InfraRed/LightIntensifier`. Partners using the library would reject what SWOC2 sends. Report upstream (UNIITY-Team/SEDAP-Express)? Until fixed, should SWOC2 send one-digit GraphicTypes for 0-9 and `DL/IR/LI` for compatibility, or stick to the ICD? Details: `docs/icd/NOTES.md`, ADR 0017. | SDX-010 / TSK (P2) | SWOC2 sends the ICD spelling (ICD is authoritative per CLAUDE.md) and accepts both on input |
 | Q-006 | Police symbols | Which regulation/symbol set, and the mapping to SIDC for external interfaces? | P4 | Symbol-provider abstraction only |
 | Q-007 | Native SEDAP | Interface definition for the native SEDAP adapter. | SDX-014 (P4) | Adapter SPI only |
 
