@@ -1,7 +1,7 @@
 # 0018 - Spike A: contact rendering with OpenLayers WebGL + symbol atlas
 
 Date: 2026-10-03
-Status: Proposed - **measurement on a real laptop GPU still pending** (Leon, TESTING.md §1.3)
+Status: Accepted (2026-10-03, after Leon's laptop measurement)
 
 ## Context
 
@@ -36,9 +36,18 @@ CPU as it would on a laptop, so its numbers are at least indicative.
 | canvas | 10000 | 2000/s | 44.3 | 14.6 | 50 | 29 | 78 ms | 1248x900 @1x |
 | canvas | 100000 | 10000/s | 10.8 | 1.9 | 366.7 | 97 | 497 ms | 1248x900 @1x |
 
-**To do (Leon):** run TESTING.md §1.3 on a mid-range laptop with a GPU and add the rows here
-(WebGL and Canvas, 100k with 10k updates/s; also 100k with 0 updates to separate render cost from
-update cost; once with "GPU hit detection" on). Then set this ADR to Accepted or Rejected.
+### Laptop measurement (Leon, 2026-10-03)
+
+| Renderer | Contacts | Updates | avg fps | 1 % low fps | p95 frame ms | frames > 50 ms | setup | viewport |
+|---|---|---|---|---|---|---|---|---|
+| webgl | 100000 | 10000/s | 73 | 30.1 | 14.1 | 0 | 465 ms | 810x964 @1x |
+| canvas | 100000 | 10000/s | 24.2 | 4.7 | 106.7 | 111 | 303 ms | 810x964 @1x |
+
+**NFR-001 is met with WebGL** (>= 30 fps also in the 1 % low, no frame over 50 ms). Canvas is
+noticeably stuttery and collapses when zoomed far out (everything in view), confirming that
+Canvas mode needs early aggregation (RNM-003, MAP-014). Not measured yet: labels (next risk; the
+label layer with decluttering, ARCHITECTURE §9, gets measured with this page in P1), the
+0-updates and GPU-hit-detection variants.
 
 ## Findings
 
@@ -63,7 +72,8 @@ update cost; once with "GPU hit detection" on). Then set this ADR to Accepted or
 - **Bundle size:** the spike entry is 1.37 MB (ol + milsymbol, 349 kB gzip). Code splitting
   is a P1 concern (Vite chunk warning).
 
-## Decision (pending measurement)
+## Decision
 
 Keep ADR 0006/0007 as decided: OpenLayers WebGL vector layer + symbol atlas, Canvas fallback with
-early aggregation, CPU-side picking. Revisit if the laptop measurement misses NFR-001.
+early aggregation, CPU-side picking (GPU hit detection off). Labels are measured with the same
+benchmark page when the label layer is built (P1).

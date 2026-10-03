@@ -49,15 +49,15 @@ not just by reading changelog pages.
 | ESLint | 10.11.0 (flat config only, `eslint.config.js`) | |
 | typescript-eslint | 8.71.0 | |
 | Prettier | 3.9.9 | |
-| OpenLayers (`ol`) | 10.10.0 | Not installed yet; added with Spike A (ROADMAP P0 item 7). |
-| milsymbol | 3.0.4 | Not installed yet; added with Spike A. |
+| OpenLayers (`ol`) | 10.10.0 | Installed with Spike A (ADR 0018). |
+| milsymbol | 3.0.4 | Installed with Spike A (ADR 0018). |
 | MGRS (JS, `mgrs` on npm, proj4js community package) | 2.2.0 | Not installed yet. The
   NGA-maintained `@ngageoint/mgrs-js` is stale (last published 2023); re-check before adoption. |
 | Mantine | 9.6.3 | Not installed yet; added with the first real UI (ROADMAP P1). |
 | dockview / dockview-react | 8.4.0 | Not installed yet. |
 | Zustand | 5.0.15 | Not installed yet. |
 | TanStack Query (`@tanstack/react-query`) | 5.104.1 | Not installed yet. |
-| zod | 4.6.5 | Not installed yet. |
+| zod | 4.6.5 | Installed with Spike B (realtime client, PR #7). |
 
 Packages marked "not installed yet" are pinned here for later use but are **not** in any
 `package.json` yet, because nothing in the P0 repo skeleton uses them (CLAUDE.md: don't add

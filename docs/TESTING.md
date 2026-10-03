@@ -473,3 +473,6 @@ OIDC discovery document from Keycloak otherwise).
   describe them. The real tunnel/Caddy steps were run against the built image on the VPS with
   headless Chromium (Playwright) in light and dark mode. The ports in that run differed (app on
   5090 next to an existing test container), the Caddy config was the same.
+- **2026-10-03** - P0 roll-up: §1.1-§1.7 are all ✅ (§1.4 with PR #7, §1.6 with PR #8). Leon ran
+  §1.3 on a laptop (results in ADR 0018) and the other sections except a hand check of SEDAP
+  byte-for-byte re-encoding (covered by `IcdSamplesTest`).
