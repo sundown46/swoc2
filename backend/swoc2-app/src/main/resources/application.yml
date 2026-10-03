@@ -30,6 +30,14 @@ spring:
             # published URL is only reachable from the host/browser).
             issuer-uri: ${SWOC2_OIDC_BACKCHANNEL_URI:${SWOC2_OIDC_ISSUER_URI:}}
 
+# OpenAPI (API-001): description at {base}/api/openapi.json, Swagger UI at {base}/api/docs (admins).
+springdoc:
+  api-docs:
+    path: /api/openapi.json
+  swagger-ui:
+    path: /api/docs
+  paths-to-match: /api/**, /rt/**, /config.json
+
 server:
   port: ${SWOC2_HTTP_PORT:5080}
 

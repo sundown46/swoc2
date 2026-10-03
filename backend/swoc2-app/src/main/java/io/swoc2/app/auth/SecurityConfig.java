@@ -86,6 +86,10 @@ class SecurityConfig {
             HttpSecurity http, ClientRegistrationRepository clientRegistrationRepository) throws Exception {
         http.authorizeHttpRequests(auth -> auth.requestMatchers(PUBLIC_PATHS)
                         .permitAll()
+                        // Interactive API explorer (API-001) is an admin/dev tool; the OpenAPI
+                        // JSON itself is readable by every logged-in user.
+                        .requestMatchers("/api/docs", "/api/docs/**", "/swagger-ui/**")
+                        .hasRole("ADMIN")
                         .anyRequest()
                         .authenticated())
                 // SPA-style CSRF (ARCHITECTURE §7 "CSRF protection applies to state-changing

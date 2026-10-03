@@ -64,6 +64,11 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-jdbc</artifactId>
     </dependency>
+    <!-- Generated OpenAPI description + bundled Swagger UI (API-001, ADR 0001; works offline). -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    </dependency>
     <!-- Jakarta Bean Validation for every external input (CLAUDE.md "Validation"). -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
