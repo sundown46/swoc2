@@ -3,6 +3,16 @@
 spring:
   application:
     name: swoc2
+  # PostgreSQL + PostGIS + TimescaleDB (ADR 0012, ADR 0020). The database is a hard dependency:
+  # Flyway waits for it at startup (connect-retries, ~1 min), then the app fails fast and the
+  # container/systemd restart policy retries.
+  datasource:
+    url: ${SWOC2_DB_URL:jdbc:postgresql://localhost:5082/swoc2}
+    username: ${SWOC2_DB_USER:swoc2}
+    password: ${SWOC2_DB_PASSWORD:}
+  flyway:
+    connect-retries: 30
+    connect-retries-interval: 2s
   security:
     oauth2:
       client:

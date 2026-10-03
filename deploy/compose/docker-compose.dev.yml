@@ -15,6 +15,18 @@
 # `docker ps --filter name=swoc2` now actually finds these.
 name: swoc2-dev
 services:
+  # PostgreSQL 18 + TimescaleDB + PostGIS (ADR 0012/0020). Same image as tests and production.
+  db:
+    image: timescale/timescaledb-ha:pg18.6-ts2.30.2
+    environment:
+      POSTGRES_USER: swoc2
+      POSTGRES_PASSWORD: swoc2-dev
+      POSTGRES_DB: swoc2
+    ports:
+      - "5082:5432"
+    volumes:
+      - db-data:/home/postgres/pgdata
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.8
     command: start-dev --import-realm
@@ -39,3 +51,6 @@ services:
       # spring-boot:run or `docker run -p 5080:5080`) - Linux needs this explicit mapping,
       # Docker Desktop provides it automatically but the mapping is harmless there too.
       - "host.docker.internal:host-gateway"
+
+volumes:
+  db-data:
