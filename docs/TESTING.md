@@ -163,11 +163,11 @@ the page - that's enough to prove the actual P0 criterion.
    returns `{"basePath":"/swoc2/"}`.
 6. Clean up: `docker compose -f deploy/compose/docker-compose.dev.yml down`.
 
-### 1.3 The 100k spike reaches NFR-001 with WebGL; Canvas fallback is documented ✅ (measurement pending)
+### 1.3 The 100k spike reaches NFR-001 with WebGL; Canvas fallback is documented ✅
 
-Covers: ROADMAP P0 item 7 (Spike A), ADR 0018. The page exists and works. **The actual NFR-001
-measurement has to happen on a laptop with a GPU**, because the VPS has none (headless WebGL there is
-software-rendered and meaningless).
+Covers: ROADMAP P0 item 7 (Spike A), ADR 0018. Measured by Leon on a laptop on 2026-10-03
+(results in ADR 0018). The measurement has to happen on a machine with a GPU; the VPS has none
+(headless WebGL there is software-rendered and meaningless).
 
 1. Build and run the image as in §1.2 (login needed), or without a backend:
    ```bash
@@ -297,6 +297,49 @@ incompatible plugins, failing scheduled task, config overrides), `PluginApiTests
 plugin over REST), `PluginShell.test.tsx` (render crash, reload, disable, throwing handler, refused
 plugins, failing activate). Verified on the VPS in the built image with a real Keycloak login and
 headless Chromium (2026-10-03).
+
+### 1.7 `/diag` diagnostics page (GEN-010) ✅
+
+Covers: ROADMAP P0 item 6. Not an acceptance bullet of its own, but the tool later sections use
+to check transports and render modes on a given machine (Q-004, Q-009).
+
+1. Build and start the image and the dev Caddy (Keycloak is not needed - `/diag` works without
+   login, and without Keycloak even being reachable):
+   ```bash
+   ssh swoc2-vps
+   cd /data/projects/swoc2
+   docker rm -f swoc2-test 2>/dev/null   # an older test container would hold port 5080
+   docker build -f deploy/docker/Dockerfile -t swoc2:test .
+   docker run -d --name swoc2-test --network host swoc2:test
+   docker compose -f deploy/compose/docker-compose.dev.yml up -d caddy
+   ```
+2. **Direct, plain HTTP.** Laptop browser: `http://localhost:5080/diag`. **Expected:** the page
+   loads without a login redirect. After a few seconds "Resulting modes" shows transport
+   **websocket**, and all four rows under "Network and transports" show **works**. SSE should
+   say "Events streamed as sent (spread ~800 ms)", and long-polling should come back after
+   ~1500 ms. "Map renderer" is **webgl** on a laptop with a GPU. (Headless/VM browsers show
+   **canvas** with WebGL marked **software**, which is the intended result: software WebGL is
+   slower than Canvas.)
+3. **Behind Caddy, sub-path:** `http://localhost:6443/swoc2/diag`. **Expected:** same as step
+   2. Check in DevTools → Network that every request goes to `/swoc2/...`.
+4. **WebSocket blocked:** `http://localhost:6445/swoc2/diag`. **Expected:** WebSocket
+   **fails**, transport **sse**. The browser console shows exactly one error, the browser's
+   own `WebSocket connection ... failed: ... 403`. Browsers always log that and a page cannot
+   suppress it. No other console errors.
+5. **WebSocket and SSE blocked:** `http://localhost:6446/swoc2/diag`. **Expected:** transport
+   **long-poll**.
+6. **Copy report:** on `http://localhost:5080/diag` (localhost counts as a secure context),
+   "Copy report" copies JSON to the clipboard. To see the plain-HTTP fallback, open the page
+   via the VPS's IP/hostname instead of `localhost` (not a secure context): "Secure context"
+   shows **no**, the four features show **limited** with their fallback, and "Copy report"
+   shows a text box with the JSON to copy by hand (GEN-012).
+7. Light and dark mode: switch the OS/browser colour scheme; the page follows it.
+8. Clean up: `docker rm -f swoc2-test`,
+   `docker compose -f deploy/compose/docker-compose.dev.yml down`.
+
+Automated coverage: `DiagProbeTests` (backend: anonymous access, long-poll cap, SSE event
+count, WebSocket echo/message limit/foreign-origin rejection) and `src/diag/*.test.ts(x)`
+(frontend: mode resolution, probe success/failure/timeout/buffering detection, UI).
 
 ## 2. Phase 1 — Live picture MVP
 

@@ -11,6 +11,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@swoc2/plugin-example": "workspace:*",
+    "@swoc2/plugin-sdk": "workspace:*",
     "milsymbol": "3.0.4",
     "ol": "10.10.0",
     "react": "19.3.0",
