@@ -163,20 +163,35 @@ the page - that's enough to prove the actual P0 criterion.
    returns `{"basePath":"/swoc2/"}`.
 6. Clean up: `docker compose -f deploy/compose/docker-compose.dev.yml down`.
 
-### 1.3 The 100k spike reaches NFR-001 with WebGL; Canvas fallback is documented ⏳
+### 1.3 The 100k spike reaches NFR-001 with WebGL; Canvas fallback is documented ✅ (measurement pending)
 
-Covers: ROADMAP P0 item 7 (Spike A). Not implemented yet.
+Covers: ROADMAP P0 item 7 (Spike A), ADR 0018. The page exists and works. **The actual NFR-001
+measurement has to happen on a laptop with a GPU**, because the VPS has none (headless WebGL there is
+software-rendered and meaningless).
 
-Once implemented:
-1. Load the synthetic 100k-contact generator against the map.
-2. With WebGL available (default browser): pan and zoom continuously for ~30s while watching
-   the browser's FPS counter (Chrome DevTools → Rendering → "Frame Rendering Stats", or
-   `chrome://tracing`). **Expected:** ≥ 30 fps sustained (NFR-001), no visible stutter on
-   contact updates.
-3. Disable WebGL (see §3.2) and reload. **Expected:** the map still renders (Canvas fallback),
-   and the ADR/spike writeup (`docs/adr/` - number TBD when this lands) states the measured fps
-   and any degraded behaviour (e.g. earlier aggregation, RNM-003).
-4. Record actual numbers from both runs in the spike's ADR, not just "it felt smooth."
+1. Build and run the image as in §1.2 (login needed), or without a backend:
+   ```bash
+   cd /data/projects/swoc2/frontend && pnpm install && pnpm --filter @swoc2/web build
+   cd apps/web && pnpm exec vite preview --port 5173
+   ```
+   and add `-L 5173:localhost:5173` to the SSH tunnel.
+2. On the **laptop**, in Chrome (fullscreen, nothing else running): open
+   `http://localhost:5173/spike-render.html` (or `http://localhost:5080/spike-render.html` after
+   login).
+3. For each row: choose the settings, press **Load**, wait for "Loaded ...", then **Run 20 s
+   benchmark** and don't touch the mouse.
+   - WebGL, 100,000, 10,000 updates/s (the NFR-001 case)
+   - WebGL, 100,000, 0 updates/s (render cost only)
+   - WebGL, 100,000, 10,000 updates/s, GPU hit detection on
+   - Canvas, 100,000, 10,000 updates/s
+   - Canvas, 10,000, 2,000 updates/s
+
+   **Expected for NFR-001:** WebGL 100k/10k rows show avg fps >= 30 and few frames > 50 ms.
+4. Also pan/zoom by hand for ~30 s with WebGL 100k/10k: watch the live fps and judge whether
+   there is visible stutter when updates arrive (every 0.5 s).
+5. Copy the Results box and paste the rows into ADR 0018's table, with the laptop model/GPU and
+   browser version. Check `chrome://gpu` that WebGL is hardware-accelerated.
+6. Check light and dark mode (the page follows the OS setting).
 
 ### 1.4 The realtime spike works in all three transport modes, incl. WS blocked ⏳
 
