@@ -242,11 +242,6 @@ public class PictureStore {
         });
     }
 
-    /** A source reported the contact as deleted (e.g. SEDAP DeleteFlag=TRUE, ICD §6.2). */
-    public boolean removeBySource(SourceKey key) {
-        return remove(key, null);
-    }
-
     /** Installs or clears (NONE) an override and re-publishes the contact if present. */
     void setOverride(SourceKey key, ContactOverride override) {
         if (override == null || override.isEmpty()) {
