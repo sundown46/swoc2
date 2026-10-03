@@ -193,21 +193,40 @@ software-rendered and meaningless).
    browser version. Check `chrome://gpu` that WebGL is hardware-accelerated.
 6. Check light and dark mode (the page follows the OS setting).
 
-### 1.4 The realtime spike works in all three transport modes, incl. WS blocked ⏳
+### 1.4 The realtime spike works in all three transport modes, incl. WS blocked ✅
 
-Covers: ROADMAP P0 item 8 (Spike B) and `docs/realtime-protocol.md` (to be written). Not
-implemented yet.
+Covers: ROADMAP P0 item 8 (Spike B), `docs/realtime-protocol.md`, backend `io.swoc2.app.realtime`,
+frontend `apps/web/src/realtime/`. Test page: `spike-realtime.html` (behind login). It subscribes
+to the synthetic `demo` topic (500 moving contacts, 2 Hz deltas).
 
-Once implemented, run the same check three times, forcing a different transport each time (see
-§3.1 for how), confirming via the Network tab each time that the *expected* transport is the one
-actually carrying traffic:
-1. WebSocket (default, nothing blocked).
-2. SSE + HTTPS POST (WS blocked at the proxy).
-3. HTTPS long-polling (WS **and** SSE blocked, or forced via the UI/compose profile).
+1. Build and start the app and the dev stack as in §1.7 step 1, **with** the OIDC variables from
+   §1.2 so login works (`SWOC2_OIDC_ISSUER_URI`, `_CLIENT_ID`, `_CLIENT_SECRET`), then recreate
+   Keycloak once so it imports the new redirect URIs for 6445/6446:
+   `docker compose -f deploy/compose/docker-compose.dev.yml up -d --force-recreate keycloak caddy`.
+2. **WebSocket:** `http://localhost:6443/swoc2/spike-realtime.html`, log in as `viewer1`.
+   **Expected** after a few seconds: Status `connected`, Transport `websocket`, Demo contacts `500`,
+   Updates/s about `200`, Last seq increasing, Gaps `0 / 0`.
+3. **WS blocked:** same page via `http://localhost:6445/swoc2/spike-realtime.html`. **Expected:**
+   Transport `sse`, otherwise as step 2. The console shows the browser's own
+   "WebSocket ... 403" (the proxy refusing the upgrade).
+4. **WS and SSE blocked:** via `http://localhost:6446/swoc2/...`. **Expected:** Transport
+   `long-poll`, otherwise as step 2.
+5. **Gap/resync:** on any of them press **Simulate gap** (drops one envelope client-side).
+   **Expected:** Gaps/resyncs `1 / 1`, contacts stay `500`, updates continue.
+6. **Force a transport:** the selector at the top forces WS/SSE/long-poll on the direct port
+   (`http://localhost:5080/spike-realtime.html`); each must reach `connected`.
+7. **Network switch / reconnect:** while connected via WebSocket, run `docker restart swoc2-test`
+   on the VPS. **Expected:** Status goes to `connecting`/`offline`, then back to `connected`
+   within ~30 s without reloading the page (a new session is created, contacts back to 500).
+8. In DevTools → Network you can see the active transport: `WS` filter (frames), an `eventsource`
+   request, or repeating `rt/poll` requests.
 
-**Expected** in all three: the live picture still updates, a gap in `seq` triggers a resync, and
-switching networks mid-session (e.g. toggling the WS-blocking profile while connected) falls back
-without the user having to reload the page.
+Automated coverage: backend `RealtimeSessionTest` (seq, replay, resync-required, transport
+replacement, one-shot polls, heartbeats), `RealtimeHttpTests` (login, CSRF, session ownership,
+problem+json), `RealtimeTransportIntegrationTests` (real WS/SSE/long-poll end to end, XSRF cookie);
+frontend `RealtimeClient.test.ts` (negotiation, fallback, timeouts, gaps, duplicates, session loss,
+forced transport, upgrade). Verified manually on the VPS with headless Chromium behind the
+WS-blocking proxies, with a real Keycloak login (2026-10-03).
 
 ### 1.5 All ICD message types round-trip ✅
 
