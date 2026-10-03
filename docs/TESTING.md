@@ -144,8 +144,9 @@ the page - that's enough to prove the actual P0 criterion.
    REQUIREMENTS AUTH-002). `http://localhost:5080/api/test/admin-only` → **expected** `403`
    with an `application/problem+json` body (`"status":403,"type":"https://swoc2.example/
    problems/forbidden"`), no stack trace. Repeat as `admin1` - `admin-only` now returns `200`.
-4. **Unauthenticated API vs. browser navigation.** Log out
-   (`http://localhost:5080/logout`, confirm the logout page) or use a private/incognito window.
+4. **Unauthenticated API vs. browser navigation.** Use a private/incognito window (there is no
+   logout button yet; logout is `POST /logout` with the CSRF header, which the P1 UI will call -
+   `GET /logout` is a 404 because there is no generated logout page).
    `curl -i http://localhost:5080/api/test/whoami` → **expected** `401`,
    `application/problem+json`. Opening `http://localhost:5080/` in the browser (no `Accept:
    application/json`) still **redirects to login** rather than showing that same 401 - the two
@@ -343,9 +344,42 @@ count, WebSocket echo/message limit/foreign-origin rejection) and `src/diag/*.te
 
 ## 2. Phase 1 — Live picture MVP
 
-Not started. Add this section's subsections (one per P1 acceptance bullet, same pattern as
-Phase 0 above) when P1 work begins - don't pre-write them speculatively, `ROADMAP.md` may still
-change before then.
+In progress (plan: `docs/plans/P1.md`). Subsections are added per milestone as things become
+testable; the final structure will follow the P1 acceptance bullets in `ROADMAP.md`.
+
+### 2.1 Database, audit log, instance settings, OpenAPI (M1) ✅ (API level)
+
+There is no UI for these yet (admin dashboard is M8); test through the browser with the API.
+
+1. Start the database with the dev stack, then the app with the DB settings:
+   ```bash
+   docker compose -f deploy/compose/docker-compose.dev.yml up -d db keycloak caddy
+   docker rm -f swoc2-test; docker build -f deploy/docker/Dockerfile -t swoc2:test .
+   docker run -d --name swoc2-test --network host \
+     -e SWOC2_DB_URL=jdbc:postgresql://localhost:5082/swoc2 -e SWOC2_DB_USER=swoc2 \
+     -e SWOC2_DB_PASSWORD=swoc2-dev \
+     -e SWOC2_OIDC_ISSUER_URI=http://localhost:5081/realms/swoc2-dev \
+     -e SWOC2_OIDC_CLIENT_ID=swoc2 -e SWOC2_OIDC_CLIENT_SECRET=dev-only-swoc2-secret \
+     -e SWOC2_PLUGINS_ENABLED=example swoc2:test
+   docker logs swoc2-test | grep -E "Successfully applied|Started Swoc2"
+   ```
+   **Expected:** "Successfully applied 1 migration" on first start, then "Started Swoc2Application".
+   Without a reachable database the app waits ~1 min and then exits with a clear error.
+2. Log in as `admin1` at `http://localhost:5080/`. **Swagger UI:** `http://localhost:5080/api/docs`
+   shows the API (settings, audit, plugins, realtime session, ...). As `viewer1` it is `403`; the
+   raw description `http://localhost:5080/api/openapi.json` is readable by every logged-in user.
+3. **Instance settings:** in Swagger UI, `GET /api/settings/instance` shows the defaults (sender
+   ID `SWOC2`, stale 2 min / delete 30 min). `PUT` a changed document (e.g. sender ID `OPS-1`, own
+   position 53.5/8.1). **Expected:** `200`; invalid values (sender ID with `;`, latitude 95,
+   stale >= delete) give `400` problem+json naming each bad field. Restart the container: the
+   saved values are still there.
+4. **Audit log:** `GET /api/audit` (admin) lists the settings change with your user name, before
+   and after; disabling/enabling the example plugin (`POST /api/plugins/example/disable`) appears
+   as `plugin.disable`. Filters: `actor`, `action` (prefix), `from`/`to`, `limit`, `beforeId`.
+5. **Security headers:** DevTools → Network → any response has `Content-Security-Policy`
+   (`default-src 'self'` ...), `X-Frame-Options: DENY`, `Referrer-Policy: same-origin`. Over plain
+   HTTP there is no `Strict-Transport-Security` (by design). The browser console shows no CSP
+   violations on `/`, `/diag`, `spike-render.html`, `spike-realtime.html` and `/api/docs`.
 
 ---
 

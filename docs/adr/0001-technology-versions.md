@@ -25,9 +25,13 @@ not just by reading changelog pages.
   bundled ICD (`docs/icd/SEDAP-Express-ICD-for-AI-v1.4.8.md`). Published on Maven Central
   (confirmed 2026-10-02 via `maven-metadata.xml`, see Q-010). Wired into `swoc2-sedap` with
   Spike C (ROADMAP P0 item 9). |
+| Flyway | 12.4.0 (managed by Spring Boot) | Migrations in `swoc2-app/src/main/resources/db/migration`. |
+| Testcontainers | 2.0.5 (managed by Spring Boot) | Integration tests against the real DB image. |
+| springdoc-openapi | 3.1.1 | Generated OpenAPI + bundled Swagger UI (API-001); Leon approved 2026-10-03. |
 | GeographicLib-Java | 2.1 | For geodesy (ARCHITECTURE §3). |
 | NGA MGRS (Java) | `mil.nga:mgrs` 2.1.3 | Same NGA library family as the JS package, so results
   match across backend and frontend (CLAUDE.md tech stack). |
+| Database image | `timescale/timescaledb-ha:pg18.6-ts2.30.2` | PostgreSQL 18.6 + TimescaleDB 2.30.2 + PostGIS 3.6.4 in one image; used by the dev stack, Testcontainers and production (ADR 0020). |
 | PostgreSQL | 18 | PostgreSQL 19 is in beta; stays on 18 until 19 is GA and PostGIS/Timescale
   confirm support. |
 | PostGIS | 3.6 | 3.7 is still pre-release. |

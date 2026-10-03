@@ -35,6 +35,7 @@ import org.springframework.security.web.authentication.DelegatingAuthenticationE
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
@@ -73,8 +74,12 @@ class SecurityConfig {
     };
 
     private final String registrationId;
+    private final String contentSecurityPolicy;
 
-    SecurityConfig(OAuth2ClientProperties oAuth2ClientProperties) {
+    SecurityConfig(
+            OAuth2ClientProperties oAuth2ClientProperties,
+            @org.springframework.beans.factory.annotation.Value("${swoc2.oidc-issuer-uri:}") String oidcIssuerUri) {
+        this.contentSecurityPolicy = ContentSecurityPolicy.build(oidcIssuerUri);
         // Single registration in this app ("swoc2") - read the id instead of hardcoding it twice.
         this.registrationId = oAuth2ClientProperties.getRegistration().keySet().stream()
                 .findFirst()
@@ -95,6 +100,13 @@ class SecurityConfig {
                 // SPA-style CSRF (ARCHITECTURE §7 "CSRF protection applies to state-changing
                 // requests"): token in the readable XSRF-TOKEN cookie, echoed by the SPA in the
                 // X-XSRF-TOKEN header. Needed now for POST /rt/session and /rt/send.
+                // Security headers (ARCHITECTURE §17, GEN-015). HSTS is only sent on HTTPS requests
+                // (Spring's default), so plain-HTTP setups (GEN-003) are not locked out.
+                .headers(headers -> headers.contentSecurityPolicy(csp -> csp.policyDirectives(contentSecurityPolicy))
+                        .referrerPolicy(
+                                referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN))
+                        .permissionsPolicyHeader(
+                                permissions -> permissions.policy("camera=(), microphone=(), payment=(), usb=()")))
                 .csrf(csrf -> csrf.spa())
                 .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
                 .oauth2Login(
