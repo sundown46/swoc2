@@ -37,6 +37,15 @@ Only requirements that are not `open` are listed, so the tables below stay untou
 | PIC-009 | done | Identity = (connection, source system, track) - `SourceKey` |
 | MAP-019 | in-progress | STALE state set by aging; grey rendering in M6 |
 | GEN-011 | in-progress | Highest classification of displayed data in `/api/picture/summary`; banner UI in M5 |
+| SDX-002 | in-progress | TCP client + server done (M3a); UDP and MQTT in M3b |
+| SDX-005 | done | CONTACT/OWNUNIT -> picture (incl. relative positions, delete flag), HEARTBEAT -> connection health |
+| CON-001 | in-progress | Manager API (CRUD, enable/disable, test before saving, field errors, audit); UI in M8 |
+| CON-002 | in-progress | State, rates, errors, last error, reconnects, last heartbeat in `GET /api/connections`; UI in M8 |
+| CON-003 | done | Backoff reconnect per connection, isolated runtimes (ADR 0021) |
+| CON-005 | in-progress | Ingress: own sender dropped, dedup cache; egress rule ("never back to origin") with outbound in M3c |
+| CON-006 | done | Connection type SPI (ADR 0021); built-in transports use it |
+| DBG-001 | in-progress | Debug tap + `GET /api/debug/messages`; console UI in M7 |
+| DBG-002 | in-progress | Enabled flag + roles in instance settings, enforced by the API |
 | NFR-001 | done | Leon's laptop measurement 2026-10-03: 73 fps avg / 30.1 fps 1 % low at 100k + 10k updates/s (ADR 0018) |
 | NFR-004 | in-progress | Ongoing |
 | RNM-001 | in-progress | Transport fallback WS -> SSE -> long-poll, PR #7 (P1 requirement, built in P0 Spike B) |
