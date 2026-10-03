@@ -26,8 +26,13 @@ one failing connection must never affect others.
   expected tens of connections; no Netty.
 - **Persistence:** `connection` table (Flyway V3), every change audited with secrets masked.
   Secret config fields are declared via `"writeOnly": true` in the schema, never returned by the
-  API, and kept on update when the client sends the mask. Encryption at rest arrives with the first
-  type that has secrets (MQTT, M3b).
+  API, kept on update when the client sends the mask, and encrypted at rest with AES-256-GCM using a
+  key derived from `SWOC2_SECRET_KEY` (`SecretBox`, JDK only). Without that key, saving a secret is
+  rejected with a field error instead of storing plaintext.
+- **Transports (M3b):** UDP unicast and multicast (several messages per datagram, ICD §4; multicast
+  group 228.2.19.80 by default), MQTT 3.1.1/5 with the HiveMQ client (P1 plan D2), publishing to
+  `UNIITY-X/<sender>/<type>`, subscribing to a filter (default `UNIITY-X/#`). The library's own
+  auto-reconnect is not used; the core's backoff applies to all transports alike.
 - **Ingest** (ARCHITECTURE §4): decode -> debug tap -> drop own sender -> dedup
   `(sender, type, number, time)` for 60 s -> OWNUNIT route table -> CONTACT/OWNUNIT into the
   picture (relative X/Y resolved against the sender's OWNUNIT, else our own position, ICD §6.2),

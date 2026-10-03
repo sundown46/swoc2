@@ -3,6 +3,8 @@
 //
 //   java SedapSender.java --mode server --port 50001                  # SWOC2 "TCP client" connects here
 //   java SedapSender.java --mode client --host 127.0.0.1 --port 50002 # connects to a SWOC2 "TCP server"
+//   java SedapSender.java --mode udp --host 127.0.0.1 --port 50003    # UDP datagrams to SWOC2 "UDP unicast"
+//   java SedapSender.java --mode stdout | mosquitto_pub -l -t UNIITY-X/SIM1/CONTACT   # MQTT via pipe
 //
 // Options: --contacts N (default 50), --rate S (updates per second per contact, default 1),
 //          --sender ID (default SIM1), --lat/--lon centre (default 54.0/8.0), --garbage (mix in
@@ -82,9 +84,7 @@ public class SedapSender {
         double[] own = {lat0, lon0};
 
         while (true) {
-            try (Socket socket = connect(mode, opt.getOrDefault("host", "127.0.0.1"), port)) {
-                System.out.println("Connected: " + socket.getRemoteSocketAddress());
-                OutputStream out = socket.getOutputStream();
+            try (Output output = open(mode, opt.getOrDefault("host", "127.0.0.1"), port)) {
                 long tick = 0;
                 long periodMs = Math.max(50, (long) (1000 / rate));
                 while (true) {
@@ -118,16 +118,79 @@ public class SedapSender {
                         batch.append("GARBAGE LINE ").append(tick).append('\n');
                         batch.append(hdr("CONTACT", sender, 'U')).append("BAD;FALSE;95.0;8.0;;;;;;;;;;;;;bad latitude\n");
                     }
-                    out.write(batch.toString().getBytes(StandardCharsets.ISO_8859_1));
-                    out.flush();
+                    output.write(batch.toString());
                     tick++;
                     Thread.sleep(periodMs);
                 }
             } catch (IOException e) {
-                System.out.println("Disconnected (" + e.getMessage() + "), retrying in 2 s");
+                System.err.println("Disconnected (" + e.getMessage() + "), retrying in 2 s");
                 Thread.sleep(2000);
             }
         }
+    }
+
+    /** Where the generated lines go. */
+    interface Output extends AutoCloseable {
+        void write(String lines) throws IOException;
+
+        @Override
+        void close() throws IOException;
+    }
+
+    static Output open(String mode, String host, int port) throws IOException {
+        if (mode.equals("stdout")) {
+            return new Output() {
+                public void write(String lines) {
+                    System.out.print(lines);
+                    System.out.flush();
+                }
+
+                public void close() {}
+            };
+        }
+        if (mode.equals("udp")) {
+            java.net.DatagramSocket socket = new java.net.DatagramSocket();
+            java.net.InetSocketAddress target = new java.net.InetSocketAddress(host, port);
+            System.err.println("Sending UDP to " + target);
+            return new Output() {
+                public void write(String lines) throws IOException {
+                    // Several messages per datagram are allowed (ICD §4); keep datagrams well below 64 KiB.
+                    StringBuilder chunk = new StringBuilder();
+                    for (String line : lines.split("\n")) {
+                        if (chunk.length() + line.length() > 8000) {
+                            send(chunk);
+                            chunk.setLength(0);
+                        }
+                        chunk.append(line).append('\n');
+                    }
+                    send(chunk);
+                }
+
+                private void send(StringBuilder chunk) throws IOException {
+                    if (chunk.length() > 0) {
+                        byte[] b = chunk.toString().getBytes(StandardCharsets.ISO_8859_1);
+                        socket.send(new java.net.DatagramPacket(b, b.length, target));
+                    }
+                }
+
+                public void close() {
+                    socket.close();
+                }
+            };
+        }
+        Socket socket = connect(mode, host, port);
+        System.err.println("Connected: " + socket.getRemoteSocketAddress());
+        OutputStream out = socket.getOutputStream();
+        return new Output() {
+            public void write(String lines) throws IOException {
+                out.write(lines.getBytes(StandardCharsets.ISO_8859_1));
+                out.flush();
+            }
+
+            public void close() throws IOException {
+                socket.close();
+            }
+        };
     }
 
     static ServerSocket server;
@@ -138,7 +201,7 @@ public class SedapSender {
         }
         if (server == null) {
             server = new ServerSocket(port);
-            System.out.println("Listening on port " + port + " - add a SWOC2 connection 'SEDAP-Express TCP client' to this host/port");
+            System.err.println("Listening on port " + port + " - add a SWOC2 connection 'SEDAP-Express TCP client' to this host/port");
         }
         return server.accept();
     }

@@ -48,6 +48,9 @@ swoc2:
     max-consecutive-failures: ${SWOC2_PLUGINS_MAX_FAILURES:3}
     enabled: ${SWOC2_PLUGINS_ENABLED:}
     disabled: ${SWOC2_PLUGINS_DISABLED:}
+  # Encrypts stored secrets such as connection passwords (ARCHITECTURE §10/§12). Required as soon
+  # as a connection with a password is saved.
+  secret-key: ${SWOC2_SECRET_KEY:}
   base-path: ${SWOC2_BASE_PATH:/}
   forwarded-headers: ${SWOC2_FORWARDED_HEADERS:true}
   oidc-issuer-uri: ${SWOC2_OIDC_ISSUER_URI:}
