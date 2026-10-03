@@ -11,11 +11,15 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
-      // Two entries: the app, and the standalone /diag page (GEN-010) that must load without
-      // the app, its login or its state.
+      // Entries: the app, the standalone /diag page (GEN-010) that must load without the app,
+      // its login or its state, and the P0 spike pages (behind login).
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         diag: fileURLToPath(new URL('./diag.html', import.meta.url)),
+        // Spike A rendering benchmark (ROADMAP P0 item 7).
+        'spike-render': fileURLToPath(new URL('./spike-render.html', import.meta.url)),
+        // Spike B realtime transport test page (ROADMAP P0 item 8).
+        'spike-realtime': fileURLToPath(new URL('./spike-realtime.html', import.meta.url)),
       },
     },
   },
@@ -24,6 +28,7 @@ export default defineConfig({
     proxy: {
       '/api': { target: 'http://localhost:5080', ws: true },
       '/config.json': 'http://localhost:5080',
+      '/rt': { target: 'http://localhost:5080', ws: true },
     },
   },
   test: {
