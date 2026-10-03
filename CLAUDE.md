@@ -3,13 +3,20 @@
 This is the entry point for Claude Code. Read it completely at the start of every session.
 It is intentionally short. The details are in `docs/`.
 
-## Current status (2026-10-03, update this each session)
+## Current status (2026-10-03 evening, update this each session)
 
-- **Phase P1 started** (2026-10-03, Leon's go). P0 is functionally complete: PRs #1-#6 merged
-  (skeleton, login, `/diag`, SEDAP codec, rendering spike); **#7 (realtime, Spike B) and #8
-  (plugin SDK skeleton) are open with `needs-review`** - don't assume they are in `main`. The P0
-  docs roll-up (requirement statuses, ADR 0018 laptop results, Q-011) is its own PR. P1 starts
-  with a plan in `docs/plans/P1.md` (to be written) - check `gh pr list` for where things are.
+- **Phase P1** (plan: `docs/plans/P1.md`, milestones M1-M9). Done and merged (2026-10-03): **M1**
+  (PostgreSQL/PostGIS/TimescaleDB + Flyway, audit log, instance settings, OpenAPI, CSP - #12),
+  **M2** (units/geodesy/MGRS/coordinate parser Java+TS #13, live picture store with aging,
+  overrides, wipe #14), **M3** (connection SPI + manager, TCP/UDP/multicast/MQTT transports, SEDAP
+  ingest, outbound with numbering/loop prevention/OWNUNIT routing, encrypted secrets - #15-#17,
+  plus the merge-loss repair PR after them). **Next: M4** realtime picture topics (viewport
+  subscription on the P0 realtime protocol, snapshot + delta from `PictureListener`, 2 Hz batching,
+  NFR-002), then **M5** app shell (Mantine, dockview, Zustand, TanStack Query).
+- **Testing the backend by hand:** TESTING.md §2.1/§2.2 (Swagger UI at `/api/docs`, test sender
+  `tools/sedap-sender`). Dev stack ports: app 5080, Keycloak 5081, DB 5082, MQTT 5084, Caddy
+  6443/6445/6446. Claude's own test containers are named `swoc2-night*` (app 5090, Keycloak 5091,
+  DB 5083, Caddy 6444/6447/6448).
 - **Decisions from Leon (2026-10-03):** SEDAP is implemented **strictly per ICD** (Q-011); Leon
   reports the reference-library deviations upstream himself. NFR-001 is met with WebGL (73 fps
   at 100k, ADR 0018); labels are the next rendering risk.
@@ -18,7 +25,12 @@ It is intentionally short. The details are in `docs/`.
   CLAUDE.md status) go into separate roll-up PRs. Create branches with
   `git checkout --no-track -b <branch> origin/main` (`-B ... origin/main` sets `main` as upstream).
   Spotless reformats Java after `spotless:apply`, so scripted text replacements on Java files can
-  silently miss - verify edits.
+  silently miss - verify edits. **Squash-merging stacked PRs and GitHub's "Update branch" have
+  repeatedly dropped changes** (#7/#8, #15, #16/#17): after Leon merges, diff `main` against the
+  intended final tree and repair immediately. Prefer unstacked PRs where possible.
+- **Tests share one Spring context and one live picture:** filter by your own connection id /
+  track ids, never "the first contact of kind X". Test-only config is in
+  `src/test/resources/config/application.yml` (a test `application.yml` would shadow the main one).
 - **Local toolchain on Leon's VPS:** JDK 25 is at `/opt/jdk25`, Node 24 at `/opt/node24` (system
   defaults are JDK 17 / Node 18). Prefix commands with
   `PATH=/opt/node24/bin:/opt/jdk25/bin:$PATH JAVA_HOME=/opt/jdk25`.
