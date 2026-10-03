@@ -24,6 +24,3 @@ spring:
             token-uri: https://swoc2-test.invalid/realms/swoc2-dev/protocol/openid-connect/token
             user-info-uri: https://swoc2-test.invalid/realms/swoc2-dev/protocol/openid-connect/userinfo
             jwk-set-uri: https://swoc2-test.invalid/realms/swoc2-dev/protocol/openid-connect/certs
-
-swoc2:
-  secret-key: test-only-secret-key

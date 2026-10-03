@@ -27,16 +27,6 @@ services:
     volumes:
       - db-data:/home/postgres/pgdata
 
-  # MQTT broker for the SEDAP-Express MQTT transport (SDX-002). Anonymous, dev only.
-  # Host port 5084 (1883 is taken by another service on Leon's VPS).
-  mqtt:
-    image: eclipse-mosquitto:2.1.2-alpine
-    configs:
-      - source: mosquitto
-        target: /mosquitto/config/mosquitto.conf
-    ports:
-      - "5084:1883"
-
   keycloak:
     image: quay.io/keycloak/keycloak:26.8
     command: start-dev --import-realm
@@ -64,9 +54,3 @@ services:
 
 volumes:
   db-data:
-
-configs:
-  mosquitto:
-    content: |
-      listener 1883
-      allow_anonymous true

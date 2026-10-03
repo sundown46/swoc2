@@ -410,25 +410,8 @@ java tools/sedap-sender/SedapSender.java --mode server --port 50001 --contacts 2
    while the sender runs); without the confirmation it is `400`.
 8. **Server transport:** create a `sedap-tcp-server` connection on port 50002 and run the sender
    with `--mode client --port 50002`: state goes from `DEGRADED` (no client) to `UP`.
-9. **UDP:** connection `{"type":"sedap-udp","config":{"localPort":50003}}`, sender
-   `--mode udp --port 50003`. Multicast: `{"type":"sedap-udp-multicast","config":{"group":"228.2.19.80","port":50000}}`
-   (needs a multicast-capable interface; the state detail says why if not).
-10. **MQTT:** `docker compose -f deploy/compose/docker-compose.dev.yml up -d mqtt`; connection
-    `{"type":"sedap-mqtt","config":{"host":"127.0.0.1","port":5084,"username":"demo","password":"secret"}}`
-    (the app needs `-e SWOC2_SECRET_KEY=...` for the password - without it the API answers with a
-    field error); feed it with the sender piped into `mosquitto_pub` (see `tools/sedap-sender`).
-    `GET /api/connections` shows `"password":"********"`, never the value.
 
-11. **Sending (admin tool):** `POST /api/sedap/send` with
-    `{"message":"TEXT;;;;U;;;;04;NONE;hello from SWOC2"}` (optional `connectionId`). The sender's
-    console (or `mosquitto_sub -t 'UNIITY-X/#'`) shows the line with SWOC2's sender ID, a per-type
-    number and the current time. Our HEARTBEAT arrives once per second on every outbound connection.
-    Invalid messages (e.g. latitude 95) are refused with the decoder's reason.
-
-Automated coverage: `SedapOutboundTests` (header stamping, per-type numbering, never back to origin,
-OWNUNIT routing, 1 Hz heartbeat, validation, roles, audit), `UdpMqttConnectionTests` (UDP unicast with several messages per datagram,
-multicast loopback, MQTT against a real Mosquitto incl. ICD topics, password encrypted and masked,
-broker loss), `SedapConnectionTests` (real TCP: ingest, relative positions, dedup, own
+Automated coverage: `SedapConnectionTests` (real TCP: ingest, relative positions, dedup, own
 sender, garbage, delete flag, reconnect, server transport, validation, test endpoint, roles,
 audit), `PictureStoreTest`, `AgingServiceTest`, `PictureApiTests`, `LineReaderTest`.
 
