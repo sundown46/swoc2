@@ -32,6 +32,21 @@ public final class Mgrs {
     }
 
     /**
+     * The 100 km grid square a position lies in, e.g. {@code 32UME} - the cell id of the picture
+     * store index and of the aggregation grid (ADR 0013). Polar areas use {@code POLAR-N/S}.
+     */
+    public static String cell100km(GeoPosition position) {
+        if (position.latitude() > 84) {
+            return "POLAR-N";
+        }
+        if (position.latitude() < -80) {
+            return "POLAR-S";
+        }
+        MGRS mgrs = MGRS.from(Point.point(position.longitude(), position.latitude()));
+        return mgrs.getZone() + "" + mgrs.getBand() + mgrs.getColumn() + mgrs.getRow();
+    }
+
+    /**
      * Parses an MGRS string (spaces optional, case-insensitive) to the south-west corner of the
      * referenced grid square, as MGRS defines it. Returns empty for anything that is not valid MGRS.
      */
