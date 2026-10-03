@@ -419,7 +419,14 @@ java tools/sedap-sender/SedapSender.java --mode server --port 50001 --contacts 2
     field error); feed it with the sender piped into `mosquitto_pub` (see `tools/sedap-sender`).
     `GET /api/connections` shows `"password":"********"`, never the value.
 
-Automated coverage: `UdpMqttConnectionTests` (UDP unicast with several messages per datagram,
+11. **Sending (admin tool):** `POST /api/sedap/send` with
+    `{"message":"TEXT;;;;U;;;;04;NONE;hello from SWOC2"}` (optional `connectionId`). The sender's
+    console (or `mosquitto_sub -t 'UNIITY-X/#'`) shows the line with SWOC2's sender ID, a per-type
+    number and the current time. Our HEARTBEAT arrives once per second on every outbound connection.
+    Invalid messages (e.g. latitude 95) are refused with the decoder's reason.
+
+Automated coverage: `SedapOutboundTests` (header stamping, per-type numbering, never back to origin,
+OWNUNIT routing, 1 Hz heartbeat, validation, roles, audit), `UdpMqttConnectionTests` (UDP unicast with several messages per datagram,
 multicast loopback, MQTT against a real Mosquitto incl. ICD topics, password encrypted and masked,
 broker loss), `SedapConnectionTests` (real TCP: ingest, relative positions, dedup, own
 sender, garbage, delete flag, reconnect, server transport, validation, test endpoint, roles,

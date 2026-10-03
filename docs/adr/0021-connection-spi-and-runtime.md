@@ -43,3 +43,8 @@ one failing connection must never affect others.
 - Plugin connection types for other protocols need a decoder for their frame format; that SPI
   (`MessageAdapter`) comes with the first such plugin.
 - OWNUNITs have no ID field in the ICD; their identity is the sender ID (`SourceKey` track = sender).
+- **Outbound (M3c):** `SedapOutbound` stamps sender ID, per-type 7-bit number (one counter per
+  type, wraps after 7F, not reset by reconnects - ICD §5) and time, then sends to all outbound
+  connections except the origin, to one connection, or to the connection an OWNUNIT was last heard
+  on (CON-007). It sends our HEARTBEAT at 1 Hz on every outbound-capable SEDAP connection that is
+  UP/DEGRADED (ICD §2).

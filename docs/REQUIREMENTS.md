@@ -42,7 +42,9 @@ Only requirements that are not `open` are listed, so the tables below stay untou
 | CON-001 | in-progress | Manager API (CRUD, enable/disable, test before saving, field errors, audit); UI in M8 |
 | CON-002 | in-progress | State, rates, errors, last error, reconnects, last heartbeat in `GET /api/connections`; UI in M8 |
 | CON-003 | done | Backoff reconnect per connection, isolated runtimes (ADR 0021) |
-| CON-005 | in-progress | Ingress: own sender dropped, dedup cache; egress rule ("never back to origin") with outbound in M3c |
+| CON-005 | done | Own sender dropped, dedup cache, outbound never back to the origin connection (`SedapOutbound`) |
+| CON-007 | in-progress | OWNUNIT route table + `OwnUnit` send target (override: explicit connection); used by tasking (P2) |
+| SDX-004 | done | Sender ID from instance settings; per-type 7-bit numbering, time stamped on send |
 | CON-006 | done | Connection type SPI (ADR 0021); built-in transports use it |
 | DBG-001 | in-progress | Debug tap + `GET /api/debug/messages`; console UI in M7 |
 | DBG-002 | in-progress | Enabled flag + roles in instance settings, enforced by the API |
