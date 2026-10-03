@@ -410,18 +410,8 @@ java tools/sedap-sender/SedapSender.java --mode server --port 50001 --contacts 2
    while the sender runs); without the confirmation it is `400`.
 8. **Server transport:** create a `sedap-tcp-server` connection on port 50002 and run the sender
    with `--mode client --port 50002`: state goes from `DEGRADED` (no client) to `UP`.
-9. **UDP:** connection `{"type":"sedap-udp","config":{"localPort":50003}}`, sender
-   `--mode udp --port 50003`. Multicast: `{"type":"sedap-udp-multicast","config":{"group":"228.2.19.80","port":50000}}`
-   (needs a multicast-capable interface; the state detail says why if not).
-10. **MQTT:** `docker compose -f deploy/compose/docker-compose.dev.yml up -d mqtt`; connection
-    `{"type":"sedap-mqtt","config":{"host":"127.0.0.1","port":5084,"username":"demo","password":"secret"}}`
-    (the app needs `-e SWOC2_SECRET_KEY=...` for the password - without it the API answers with a
-    field error); feed it with the sender piped into `mosquitto_pub` (see `tools/sedap-sender`).
-    `GET /api/connections` shows `"password":"********"`, never the value.
 
-Automated coverage: `UdpMqttConnectionTests` (UDP unicast with several messages per datagram,
-multicast loopback, MQTT against a real Mosquitto incl. ICD topics, password encrypted and masked,
-broker loss), `SedapConnectionTests` (real TCP: ingest, relative positions, dedup, own
+Automated coverage: `SedapConnectionTests` (real TCP: ingest, relative positions, dedup, own
 sender, garbage, delete flag, reconnect, server transport, validation, test endpoint, roles,
 audit), `PictureStoreTest`, `AgingServiceTest`, `PictureApiTests`, `LineReaderTest`.
 

@@ -37,7 +37,7 @@ Only requirements that are not `open` are listed, so the tables below stay untou
 | PIC-009 | done | Identity = (connection, source system, track) - `SourceKey` |
 | MAP-019 | in-progress | STALE state set by aging; grey rendering in M6 |
 | GEN-011 | in-progress | Highest classification of displayed data in `/api/picture/summary`; banner UI in M5 |
-| SDX-002 | done | TCP client/server, UDP unicast/multicast, MQTT 3.1.1/5 (one file each, ADR 0021) |
+| SDX-002 | in-progress | TCP client + server done (M3a); UDP and MQTT in M3b |
 | SDX-005 | done | CONTACT/OWNUNIT -> picture (incl. relative positions, delete flag), HEARTBEAT -> connection health |
 | CON-001 | in-progress | Manager API (CRUD, enable/disable, test before saving, field errors, audit); UI in M8 |
 | CON-002 | in-progress | State, rates, errors, last error, reconnects, last heartbeat in `GET /api/connections`; UI in M8 |

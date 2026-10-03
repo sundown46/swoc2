@@ -69,11 +69,6 @@
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
     </dependency>
-    <!-- MQTT transport for SEDAP-Express (SDX-002; P1 plan decision D2: HiveMQ client). -->
-    <dependency>
-      <groupId>com.hivemq</groupId>
-      <artifactId>hivemq-mqtt-client</artifactId>
-    </dependency>
     <!-- Jakarta Bean Validation for every external input (CLAUDE.md "Validation"). -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

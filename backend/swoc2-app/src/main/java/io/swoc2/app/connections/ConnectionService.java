@@ -48,7 +48,6 @@ public class ConnectionService implements DisposableBean {
     private final ObjectMapper mapper;
     private final AuditLog auditLog;
     private final ConnectionTypeRegistry types;
-    private final SecretBox secrets;
     private final Map<String, FrameHandler> handlers = new HashMap<>();
     private final Map<UUID, ConnectionRuntime> runtimes = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, r -> {
@@ -64,9 +63,7 @@ public class ConnectionService implements DisposableBean {
             AuditLog auditLog,
             ConnectionTypeRegistry types,
             List<FrameHandler> frameHandlers,
-            io.swoc2.app.picture.AgingService aging,
-            SecretBox secrets) {
-        this.secrets = secrets;
+            io.swoc2.app.picture.AgingService aging) {
         this.jdbc = jdbc;
         this.mapper = mapper;
         this.auditLog = auditLog;
@@ -126,44 +123,7 @@ public class ConnectionService implements DisposableBean {
                     d.name());
             return null;
         }
-        ConnectionDefinition plain;
-        try {
-            plain = withConfig(d, decryptSecrets(d.type(), d.config()));
-        } catch (IllegalStateException e) {
-            log.error("Connection {} not started: {}", d.name(), e.getMessage());
-            return null;
-        }
-        return new ConnectionRuntime(plain, type.get(), handler, scheduler, clock);
-    }
-
-    private static ConnectionDefinition withConfig(ConnectionDefinition d, Map<String, Object> config) {
-        return new ConnectionDefinition(d.id(), d.name(), d.type(), d.enabled(), d.direction(), config, d.aging());
-    }
-
-    /** Secret fields encrypted for storage (never plaintext in the DB). */
-    private Map<String, Object> encryptSecrets(String typeId, Map<String, Object> config) {
-        Map<String, Object> out = new LinkedHashMap<>(config);
-        for (String field : types.secretFields(typeId)) {
-            Object v = out.get(field);
-            if (v instanceof String s && !s.isEmpty() && !SecretBox.isEncrypted(s)) {
-                if (!secrets.available()) {
-                    throw new InvalidConnectionException(
-                            Map.of(field, "cannot be saved: SWOC2_SECRET_KEY is not configured"));
-                }
-                out.put(field, secrets.encrypt(s));
-            }
-        }
-        return out;
-    }
-
-    private Map<String, Object> decryptSecrets(String typeId, Map<String, Object> config) {
-        Map<String, Object> out = new LinkedHashMap<>(config);
-        for (String field : types.secretFields(typeId)) {
-            if (out.get(field) instanceof String s) {
-                out.put(field, secrets.decrypt(s));
-            }
-        }
-        return out;
+        return new ConnectionRuntime(d, type.get(), handler, scheduler, clock);
     }
 
     public Collection<ConnectionRuntime> runtimes() {
@@ -224,8 +184,6 @@ public class ConnectionService implements DisposableBean {
                 input.config(),
                 input.aging());
         validate(d);
-        // Secrets never reach the database in plaintext (ARCHITECTURE §10).
-        d = withConfig(d, encryptSecrets(d.type(), d.config()));
         jdbc.sql("""
                 INSERT INTO connection (id, name, type, enabled, direction, config, aging, updated_by)
                 VALUES (:id, :name, :type, :enabled, :direction, CAST(:config AS jsonb), CAST(:aging AS jsonb), :actor)
@@ -268,18 +226,9 @@ public class ConnectionService implements DisposableBean {
                 config.put(secret, before.config().get(secret));
             }
         }
-        // Stored secrets may be encrypted (from the DB) or plain (from the runtime): normalise to plain
-        // for validation, then encrypt for storage.
         ConnectionDefinition d = new ConnectionDefinition(
-                id,
-                input.name(),
-                input.type(),
-                input.enabled(),
-                input.direction(),
-                decryptSecrets(input.type(), config),
-                input.aging());
+                id, input.name(), input.type(), input.enabled(), input.direction(), config, input.aging());
         validate(d);
-        d = withConfig(d, encryptSecrets(d.type(), d.config()));
         jdbc.sql("""
                 UPDATE connection SET name = :name, type = :type, enabled = :enabled, direction = :direction,
                     config = CAST(:config AS jsonb), aging = CAST(:aging AS jsonb), updated_at = now(), updated_by = :actor
