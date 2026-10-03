@@ -1,3 +1,6 @@
+# Loaded IN ADDITION to src/main/resources/application.yml (classpath:/config/ has higher
+# precedence). A test-classpath application.yml would instead shadow the main file completely,
+# silently dropping every real setting from all tests.
 # Test-only override. The main application.yml drives OAuth2 client registration from
 # SWOC2_OIDC_ISSUER_URI via live discovery (a GET to {issuer}/.well-known/openid-configuration
 # at startup) - correct for real environments, but it would make every test that boots the

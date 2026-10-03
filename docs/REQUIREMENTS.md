@@ -24,7 +24,11 @@ Only requirements that are not `open` are listed, so the tables below stay untou
 | PLG-001 | in-progress | SDK skeleton (panels, toolbar), PR #8 / ADR 0019; more extension points with P1/P2 |
 | PLG-002 | in-progress | SPI skeleton (lifecycle, endpoints, scheduled tasks), PR #8; more SPIs with P1 |
 | PLG-003 | in-progress | Isolation proven with example plugins, PR #8 (done once merged) |
-| API-001 | open | No OpenAPI generation yet - planned at the start of P1 |
+| API-001 | done | springdoc: `{base}/api/openapi.json`, Swagger UI `{base}/api/docs` for admins (TESTING.md §2.1) |
+| AUTH-005 | in-progress | Audit log infrastructure (`io.swoc2.app.audit`, ADR 0020); picture edits audited when they exist (M2/M7) |
+| ADM-003 | in-progress | Instance settings API (sender ID, own position, aging, debug console); UI in M8 |
+| ADM-006 | in-progress | Audit query API with filters; viewer UI in M8 |
+| GEN-015 | in-progress | CSP + security headers done (M1); rate limiting, CIDR allowlist, session timeouts in M9 |
 | NFR-001 | done | Leon's laptop measurement 2026-10-03: 73 fps avg / 30.1 fps 1 % low at 100k + 10k updates/s (ADR 0018) |
 | NFR-004 | in-progress | Ongoing |
 | RNM-001 | in-progress | Transport fallback WS -> SSE -> long-poll, PR #7 (P1 requirement, built in P0 Spike B) |

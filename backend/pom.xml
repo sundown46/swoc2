@@ -32,6 +32,7 @@
     <geographiclib.version>2.1</geographiclib.version>
     <mgrs.version>2.1.3</mgrs.version>
     <sedapexpress.version>1.4.8</sedapexpress.version>
+    <springdoc.version>3.1.1</springdoc.version>
 
     <!-- Code style (see docs/adr/0016-code-style-and-static-analysis.md). -->
     <spotless.version>2.46.1</spotless.version>
@@ -55,6 +56,11 @@
         <scope>import</scope>
       </dependency>
 
+      <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        <version>${springdoc.version}</version>
+      </dependency>
       <dependency>
         <groupId>net.sf.geographiclib</groupId>
         <artifactId>GeographicLib-Java</artifactId>

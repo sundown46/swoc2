@@ -338,7 +338,7 @@ All variables are documented in `.env.example`. Defaults are chosen for local de
 | `SWOC2_PUBLIC_URL` | `http://localhost:5080` | External URL (redirects, cookie Secure auto-detect) |
 | `SWOC2_FORWARDED_HEADERS` | `true` | Trust `X-Forwarded-*` / `Forwarded` |
 | `SWOC2_COOKIE_SECURE` | `auto` | `auto` / `true` / `false` |
-| `SWOC2_DB_URL` / `_USER` / `_PASSWORD` | — | PostgreSQL |
+| `SWOC2_DB_URL` / `_USER` / `_PASSWORD` | `jdbc:postgresql://localhost:5082/swoc2` / `swoc2` / — | PostgreSQL + PostGIS + TimescaleDB (ADR 0020); hard dependency, the app waits ~1 min for it at startup |
 | `SWOC2_OIDC_ISSUER_URI` | — | Browser-facing Keycloak realm URL |
 | `SWOC2_OIDC_BACKCHANNEL_URI` | (= issuer) | Internal Keycloak URL if different |
 | `SWOC2_OIDC_CLIENT_ID` / `_CLIENT_SECRET` | — | Confidential client |

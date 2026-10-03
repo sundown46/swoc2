@@ -3,6 +3,16 @@
 spring:
   application:
     name: swoc2
+  # PostgreSQL + PostGIS + TimescaleDB (ADR 0012, ADR 0020). The database is a hard dependency:
+  # Flyway waits for it at startup (connect-retries, ~1 min), then the app fails fast and the
+  # container/systemd restart policy retries.
+  datasource:
+    url: ${SWOC2_DB_URL:jdbc:postgresql://localhost:5082/swoc2}
+    username: ${SWOC2_DB_USER:swoc2}
+    password: ${SWOC2_DB_PASSWORD:}
+  flyway:
+    connect-retries: 30
+    connect-retries-interval: 2s
   security:
     oauth2:
       client:
@@ -19,6 +29,14 @@ spring:
             # different internal address (e.g. the app runs in a container but Keycloak's
             # published URL is only reachable from the host/browser).
             issuer-uri: ${SWOC2_OIDC_BACKCHANNEL_URI:${SWOC2_OIDC_ISSUER_URI:}}
+
+# OpenAPI (API-001): description at {base}/api/openapi.json, Swagger UI at {base}/api/docs (admins).
+springdoc:
+  api-docs:
+    path: /api/openapi.json
+  swagger-ui:
+    path: /api/docs
+  paths-to-match: /api/**, /rt/**, /config.json
 
 server:
   port: ${SWOC2_HTTP_PORT:5080}
