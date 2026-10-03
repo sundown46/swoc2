@@ -10,7 +10,24 @@ Only requirements that are not `open` are listed, so the tables below stay untou
 
 | ID | Status | Where |
 |---|---|---|
+| GEN-002 | in-progress | All assets bundled, no CDN/external fonts so far; re-checked with every feature |
+| GEN-003 | in-progress | Plain HTTP works end to end; built-in TLS modes are GEN-013 (P1) |
+| GEN-004 | done | Sub-path + forwarded headers, tested behind Caddy (TESTING.md §1.2, §1.7) |
+| GEN-005 | in-progress | Every setting so far via env vars (`.env.example`, ARCHITECTURE §12) |
+| GEN-006 | in-progress | Docker image done; LXC/systemd guide pending (`deploy/lxc/`) |
+| GEN-009 | in-progress | Ongoing principle; tolerant codec, transport fallback, plugin isolation so far |
 | GEN-010 | done | `/diag` page (`frontend/apps/web/src/diag/`, `io.swoc2.app.diag`), TESTING.md §1.7 |
+| AUTH-001 | done | BFF login against Keycloak (ADR 0004), TESTING.md §1.2 |
+| AUTH-002 | in-progress | Role mapping + hierarchy done; enforced per feature as features land |
+| MAP-009 | in-progress | WebGL 100k proven (ADR 0018); the real map comes in P1 |
+| SDX-001 | done | `backend/swoc2-sedap` codec (ADR 0017), `docs/icd/NOTES.md`, TESTING.md §1.5 |
+| PLG-001 | in-progress | SDK skeleton (panels, toolbar), PR #8 / ADR 0019; more extension points with P1/P2 |
+| PLG-002 | in-progress | SPI skeleton (lifecycle, endpoints, scheduled tasks), PR #8; more SPIs with P1 |
+| PLG-003 | in-progress | Isolation proven with example plugins, PR #8 (done once merged) |
+| API-001 | open | No OpenAPI generation yet - planned at the start of P1 |
+| NFR-001 | done | Leon's laptop measurement 2026-10-03: 73 fps avg / 30.1 fps 1 % low at 100k + 10k updates/s (ADR 0018) |
+| NFR-004 | in-progress | Ongoing |
+| RNM-001 | in-progress | Transport fallback WS -> SSE -> long-poll, PR #7 (P1 requirement, built in P0 Spike B) |
 
 ## 0. Glossary
 

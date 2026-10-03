@@ -1,6 +1,6 @@
 # SWOC2 — Roadmap
 
-**Current phase: P0**
+**Current phase: P1** (set 2026-10-03 on Leon's go; P0 status below)
 
 Claude Code works only on the current phase. A phase is complete when all of its acceptance
 criteria are met. Leon then sets the next phase here. Within a phase, the order of items below is
@@ -31,13 +31,15 @@ Goal: a solid skeleton and **proof of the risky technical assumptions before fea
 10. Plugin SDK skeletons (frontend and backend) with one trivial example plugin each, proving that
     error isolation works (a deliberately crashing plugin does not affect the app).
 
-**Acceptance:**
-- Login works with dev Keycloak over plain HTTP and behind the Caddy reverse proxy (also on a sub-path).
-- The 100k spike reaches NFR-001 with WebGL. The Canvas fallback behaviour is documented.
-- The realtime spike works in all three transport modes, including when WS is blocked.
-- All ICD message types round-trip.
-- A crashing example plugin is contained.
-- CI is green and the Docker image builds.
+**Acceptance** (status 2026-10-03):
+- ✅ Login works with dev Keycloak over plain HTTP and behind the Caddy reverse proxy (also on a sub-path).
+- ✅ The 100k spike reaches NFR-001 with WebGL. The Canvas fallback behaviour is documented (ADR 0018).
+- ✅ (PR #7) The realtime spike works in all three transport modes, including when WS is blocked.
+- ✅ All ICD message types round-trip (PR #5).
+- ✅ (PR #8) A crashing example plugin is contained.
+- ✅ CI is green and the Docker image builds.
+
+Open from P0 requirements, carried into P1: API-001 (OpenAPI), GEN-006 LXC guide, NFR-005.
 
 ## P1 — Live picture MVP
 

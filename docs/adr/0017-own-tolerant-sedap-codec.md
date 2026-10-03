@@ -1,7 +1,7 @@
 # 0017 - Own tolerant, schema-driven SEDAP-Express codec; reference library as test oracle
 
 Date: 2026-10-03
-Status: Proposed (Spike C, ROADMAP P0 item 9 - Leon to confirm)
+Status: Accepted (2026-10-03, PR #5 merged; Leon: implement strictly per ICD, see Q-011)
 
 ## Context
 

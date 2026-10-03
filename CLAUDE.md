@@ -5,11 +5,20 @@ It is intentionally short. The details are in `docs/`.
 
 ## Current status (2026-10-03, update this each session)
 
-- **Phase P0**, items 1-5 of 10 done and merged (PR #1 skeleton/CI/ADRs, PR #2 BFF login,
-  `config.json`, sub-path). Items 6-10 (`/diag`, Spike A/B/C, plugin SDK skeleton) are being
-  worked on autonomously overnight 2026-10-02/03 in the order 6 -> 9 -> 7 -> 8 -> 10; check the
-  open PRs (`gh pr list`) for where that got to. PRs labelled `needs-review` may be stacked on each
-  other - their descriptions say the merge order.
+- **Phase P1 started** (2026-10-03, Leon's go). P0 is functionally complete: PRs #1-#6 merged
+  (skeleton, login, `/diag`, SEDAP codec, rendering spike); **#7 (realtime, Spike B) and #8
+  (plugin SDK skeleton) are open with `needs-review`** - don't assume they are in `main`. The P0
+  docs roll-up (requirement statuses, ADR 0018 laptop results, Q-011) is its own PR. P1 starts
+  with a plan in `docs/plans/P1.md` (to be written) - check `gh pr list` for where things are.
+- **Decisions from Leon (2026-10-03):** SEDAP is implemented **strictly per ICD** (Q-011); Leon
+  reports the reference-library deviations upstream himself. NFR-001 is met with WebGL (73 fps
+  at 100k, ADR 0018); labels are the next rendering risk.
+- **Working rules learned:** never merge PRs (blocked for Claude; Leon merges). Open PRs must not
+  conflict with each other - shared docs (REQUIREMENTS status, ADR 0001, TESTING changelog,
+  CLAUDE.md status) go into separate roll-up PRs. Create branches with
+  `git checkout --no-track -b <branch> origin/main` (`-B ... origin/main` sets `main` as upstream).
+  Spotless reformats Java after `spotless:apply`, so scripted text replacements on Java files can
+  silently miss - verify edits.
 - **Local toolchain on Leon's VPS:** JDK 25 is at `/opt/jdk25`, Node 24 at `/opt/node24` (system
   defaults are JDK 17 / Node 18). Prefix commands with
   `PATH=/opt/node24/bin:/opt/jdk25/bin:$PATH JAVA_HOME=/opt/jdk25`.
