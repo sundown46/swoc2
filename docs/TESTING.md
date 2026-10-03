@@ -414,18 +414,6 @@ java tools/sedap-sender/SedapSender.java --mode server --port 50001 --contacts 2
 Automated coverage: `SedapConnectionTests` (real TCP: ingest, relative positions, dedup, own
 sender, garbage, delete flag, reconnect, server transport, validation, test endpoint, roles,
 audit), `PictureStoreTest`, `AgingServiceTest`, `PictureApiTests`, `LineReaderTest`.
-### 2.2 Live picture store, aging, overrides, wipe (M2) ⏳
-
-Implemented at API level (`/api/picture/...`, see Swagger UI), but there is no way to put contacts
-into the picture by hand until the SEDAP connections and the test sender arrive in M3. Then this
-section gets its steps: contacts appear in `GET /api/picture/contacts`, turn `STALE` after the
-stale time and disappear after the delete time; an operator renames a contact via
-`PUT /api/picture/contacts/{id}/override` and the name survives further updates; an admin wipes
-with `POST /api/picture/wipe` and `{"confirm":"WIPE"}`.
-
-Automated coverage: `PictureStoreTest` (identity across updates, cell index, override layer,
-stale/remove races, wipe, classification, 200k upserts in well under a second on the VPS),
-`AgingServiceTest`, `PictureApiTests` (roles, persistence, audit, validation, wipe confirmation).
 
 ---
 
