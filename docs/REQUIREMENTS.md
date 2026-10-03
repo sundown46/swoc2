@@ -29,6 +29,14 @@ Only requirements that are not `open` are listed, so the tables below stay untou
 | ADM-003 | in-progress | Instance settings API (sender ID, own position, aging, debug console); UI in M8 |
 | ADM-006 | in-progress | Audit query API with filters; viewer UI in M8 |
 | GEN-015 | in-progress | CSP + security headers done (M1); rate limiting, CIDR allowlist, session timeouts in M9 |
+| PIC-001 | in-progress | In-memory picture store with MGRS cell index (`io.swoc2.app.picture`); fed by connections in M3 |
+| PIC-003 | in-progress | Override layer persisted, audited, applied on read; CAC UI in M7 |
+| PIC-004 | in-progress | Aging stale/delete from instance settings, per-connection hook ready; connection overrides in M3/M8 |
+| PIC-005 | in-progress | Wipe API with confirmation and audit; admin UI in M8 |
+| PIC-008 | done | No fusion; one contact per source key (`SourceKey`) |
+| PIC-009 | done | Identity = (connection, source system, track) - `SourceKey` |
+| MAP-019 | in-progress | STALE state set by aging; grey rendering in M6 |
+| GEN-011 | in-progress | Highest classification of displayed data in `/api/picture/summary`; banner UI in M5 |
 | NFR-001 | done | Leon's laptop measurement 2026-10-03: 73 fps avg / 30.1 fps 1 % low at 100k + 10k updates/s (ADR 0018) |
 | NFR-004 | in-progress | Ongoing |
 | RNM-001 | in-progress | Transport fallback WS -> SSE -> long-poll, PR #7 (P1 requirement, built in P0 Spike B) |

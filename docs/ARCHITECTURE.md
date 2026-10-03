@@ -151,8 +151,9 @@ The displayed value of a descriptive field is resolved per field in this order:
 3. **Master data value** (by MMSI or ICAO).
 
 Kinematics (position, course, speed, time) always come from the source. The override layer is
-part of the shared picture and is persisted. This means it survives restarts. It is cleared only
-together with a live-picture wipe, or kept if the contact can be re-identified by its key.
+part of the shared picture and is persisted. This means it survives restarts. A live-picture wipe
+keeps overrides by default, so they re-apply when the same tracks (same source key) reappear; the
+admin can choose to clear them with the wipe (`POST /api/picture/wipe` with `clearOverrides`).
 
 ### 5.3 Units
 

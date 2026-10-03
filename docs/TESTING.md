@@ -381,6 +381,19 @@ There is no UI for these yet (admin dashboard is M8); test through the browser w
    HTTP there is no `Strict-Transport-Security` (by design). The browser console shows no CSP
    violations on `/`, `/diag`, `spike-render.html`, `spike-realtime.html` and `/api/docs`.
 
+### 2.2 Live picture store, aging, overrides, wipe (M2) ⏳
+
+Implemented at API level (`/api/picture/...`, see Swagger UI), but there is no way to put contacts
+into the picture by hand until the SEDAP connections and the test sender arrive in M3. Then this
+section gets its steps: contacts appear in `GET /api/picture/contacts`, turn `STALE` after the
+stale time and disappear after the delete time; an operator renames a contact via
+`PUT /api/picture/contacts/{id}/override` and the name survives further updates; an admin wipes
+with `POST /api/picture/wipe` and `{"confirm":"WIPE"}`.
+
+Automated coverage: `PictureStoreTest` (identity across updates, cell index, override layer,
+stale/remove races, wipe, classification, 200k upserts in well under a second on the VPS),
+`AgingServiceTest`, `PictureApiTests` (roles, persistence, audit, validation, wipe confirmation).
+
 ---
 
 ## 3. How-to appendix
