@@ -7,10 +7,15 @@
   "types": "src/index.ts",
   "scripts": {
     "build": "echo 'no build step yet' && exit 0",
-    "test": "echo 'no tests yet' && exit 0",
+    "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "5.0.3"
+  },
+  "dependencies": {
+    "geographiclib-geodesic": "2.2.0",
+    "mgrs": "2.2.0"
   }
 }
