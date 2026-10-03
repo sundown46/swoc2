@@ -16,6 +16,7 @@
     <module>swoc2-domain</module>
     <module>swoc2-plugin-api</module>
     <module>swoc2-sedap</module>
+    <module>plugins/example-plugin</module>
     <module>swoc2-app</module>
   </modules>
 
