@@ -68,6 +68,11 @@ public class AuditLog {
         return text;
     }
 
+    /** The actor name audit records use for the current request ({@code system} outside one). */
+    public static String currentActorName() {
+        return currentActor();
+    }
+
     /** {@code preferred_username} for OIDC users (readable), else the principal name. */
     static String currentActor() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
